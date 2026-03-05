@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Island Hopper: Bocas del Toro Concierge</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Paradise Found Intro State -->
+    <div id="introHero" class="intro-hero">
+        <video autoplay muted loop playsinline class="video-background">
+            <source src="https://cdn.pixabay.com/video/2020/05/25/40141-424756549_large.mp4" type="video/mp4">
+            <!-- Luxury tropical ocean wave background -->
+        </video>
+        <div class="intro-content">
+            <h1 class="intro-title">Island Hopper</h1>
+            <p class="intro-subtitle">Paradise Found</p>
+            
+            <button id="startPlanningBtn" class="mic-button">
+                <span class="icon">🎙️</span>
+            </button>
+            <p style="margin-top: 2rem; color: var(--brushed-gold); letter-spacing: 2px;">Tap to Start Planning</p>
+        </div>
+    </div>
+
+    <!-- Main Concierge App Wrapper -->
+    <div class="app-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">Island Hopper</div>
+            
+            <div class="concierge-profile">
+                <div id="conciergeAvatar" class="concierge-avatar">
+                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600&auto=format&fit=crop" alt="Concierge Profile">
+                    <div id="speakingIndicator" class="speaking-indicator"></div>
+                </div>
+            </div>
+
+            <div class="concierge-bar">
+                <div id="status" class="status-text">Your live multimodal concierge is ready.</div>
+            </div>
+
+            <nav class="nav-links">
+                <a href="#" class="nav-item">Verified Guides</a>
+                <a href="#" class="nav-item">Local Water Taxis</a>
+                <a href="#" class="nav-item">Weather Updates</a>
+            </nav>
+
+            <!-- Mode Toggles -->
+            <div class="mode-toggle-container">
+                <button id="modeToggle" class="mode-toggle" style="margin-bottom: 1rem;">
+                    <span id="modeIcon">🎙️</span>
+                    <span id="modeText">Voice Mode</span>
+                </button>
+                <button id="gestureToggle" class="mode-toggle">
+                    <span>👋</span>
+                    <span>Gesture Control</span>
+                </button>
+            </div>
+
+            <!-- Gesture Privacy Lens (Hidden by default) -->
+            <div id="gestureContainer" class="gesture-container" style="display: none;">
+                <div class="camera-preview-wrapper">
+                    <video id="gestureVideo" autoplay playsinline muted></video>
+                    <div class="privacy-badge">Privacy Active</div>
+                </div>
+                <p class="privacy-text">Local Processing Only. No Video Recorded or Stored.</p>
+            </div>
+        </aside>
+
+        <!-- Main Content Workspace -->
+        <main class="main-content">
+            <div id="emptyState" class="empty-state">
+                <h2>Speak, type, or gesture to build your trip.</h2>
+                <p>Try: "I have 3 days, want to see sloths and avoid crowds."</p>
+            </div>
+            
+            <div id="chatMessages" class="chat-messages" style="display: none;">
+                <!-- Written Answers will appear here -->
+            </div>
+
+            <!-- Editorial Itinerary Grid -->
+            <div id="itineraryGrid" class="itinerary-grid" style="display: none;">
+                <!-- Day 01, Day 02 markers and cards injected here -->
+            </div>
+
+            <!-- Text Input Area (Hidden by default) -->
+            <div id="textInputContainer" class="text-input-container" style="display: none;">
+                <input type="text" id="userInput" placeholder="Type your request to the concierge..." />
+                <button id="sendBtn">Send</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Cinematic Director Agent Player -->
+    <div id="cinematicPlayer" class="cinematic-player">
+        <button id="closeCinematicBtn" class="close-cinematic">Close Premiere</button>
+        <div class="cinematic-content">
+            <h2 id="cinematicTitle" class="cinematic-title">Your Island Story</h2>
+            <div id="cinematicImageContainer" class="cinematic-image-container"></div>
+        </div>
+    </div>
+
+    <div id="customCursor" class="custom-cursor"></div>
+
+    <!-- Modals -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="modalTitle">Title</h2>
+            <div id="modalBody">Content</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

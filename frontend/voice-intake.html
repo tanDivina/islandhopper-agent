@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Island Hopper - Captain Voice Intake</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --deep-emerald: #061F1A; --brushed-gold: #D4AF37; --white: #FFFFFF; }
+        body { background-color: var(--deep-emerald); color: var(--white); font-family: 'Plus Jakarta Sans', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; }
+        h1 { font-family: 'Outfit'; color: var(--brushed-gold); font-size: 3rem; margin-bottom: 1rem; }
+        p { font-size: 1.2rem; opacity: 0.8; max-width: 600px; margin-bottom: 3rem; }
+        
+        .mic-btn {
+            background: none; border: 4px solid var(--brushed-gold); color: var(--brushed-gold);
+            width: 150px; height: 150px; border-radius: 50%; font-size: 4rem; cursor: pointer;
+            transition: all 0.3s; box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .mic-btn.recording { background: var(--brushed-gold); color: var(--deep-emerald); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); } 70% { box-shadow: 0 0 0 30px rgba(212, 175, 55, 0); } 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); } }
+        
+        #status { margin-top: 2rem; font-size: 1.2rem; color: var(--brushed-gold); font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Captain Registration</h1>
+    <p>Tap the microphone and tell us your name, your WhatsApp number, what tours you do, and how you charge (English or Spanish). We will handle the rest.</p>
+    
+    <button id="micBtn" class="mic-btn">🎙️</button>
+    <div id="status">Ready to listen.</div>
+
+    <script>
+        const micBtn = document.getElementById('micBtn');
+        const statusText = document.getElementById('status');
+        let ws = null;
+        let mediaRecorder = null;
+        let isLive = false;
+
+        micBtn.addEventListener('click', async () => {
+            if (isLive) { ws.close(); return; }
+
+            statusText.textContent = "Connecting...";
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(`${protocol}//${window.location.host}/live/intake`);
+                
+                ws.onopen = () => {
+                    isLive = true;
+                    micBtn.classList.add('recording');
+                    statusText.textContent = "Listening... Tell us about your tours and rates.";
+                    
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                    mediaRecorder.ondataavailable = async (e) => {
+                        if (e.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+                            const reader = new FileReader();
+                            reader.readAsDataURL(e.data);
+                            reader.onloadend = () => {
+                                const base64 = reader.result.split(',')[1];
+                                ws.send(JSON.stringify({ type: "audio", data: base64 }));
+                            };
+                        }
+                    };
+                    mediaRecorder.start(1000);
+                };
+
+                let audioQueue = Promise.resolve();
+                ws.onmessage = (event) => {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === "audio") {
+                        audioQueue = audioQueue.then(async () => {
+                            const audio = new Audio(msg.data);
+                            await new Promise((resolve) => {
+                                audio.onended = resolve; audio.onerror = resolve; audio.play().catch(resolve);
+                            });
+                        });
+                    } else if (msg.type === "success") {
+                        statusText.textContent = "Profile submitted successfully! We will review it.";
+                        micBtn.classList.remove('recording');
+                        isLive = false;
+                        ws.close();
+                    } else if (msg.type === "error") {
+                        statusText.textContent = "Error: " + msg.message;
+                    }
+                };
+
+                ws.onclose = () => { isLive = false; micBtn.classList.remove('recording'); if(mediaRecorder) mediaRecorder.stop(); };
+            } catch (err) {
+                statusText.textContent = "Microphone access required.";
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+graph TD
+    %% Core Architecture Visualization for Island Hopper
+    
+    subgraph Traveler App
+        user([Traveler])
+    end
+
+    subgraph Supply Side
+        captain([Local Captain])
+        admin([System Admin])
+    end
+
+    subgraph Core Agents
+        subagent_LiveConcierge[("🎙️ Live Concierge Agent
+(Gemini 2.5 Flash Native)")]
+        subagent_Intake[("🤝 Captain Intake Agent
+(Gemini 2.5 Flash Native)")]
+    end
+
+    subgraph Background Agents
+        subagent_Memory[("🧠 Cognitive Memory Agent
+(Gemini 3.1 Flash-Lite)")]
+        subagent_Director[("🎬 Director Agent
+(Gemini 3.1 Flash-Lite)")]
+        subagent_Visual[("📸 Visual Creator Agent
+(Imagen 3)")]
+    end
+
+    subgraph Google Cloud Firestore
+        db_rag[(Knowledge Base)]
+        db_pending[(Pending Intake)]
+        db_memory[(Traveler Profiles)]
+    end
+
+    %% Traveler Flows
+    user <-->|Voice/Text via WebSockets| subagent_LiveConcierge
+    subagent_LiveConcierge <-->|Queries Rates| db_rag
+    subagent_LiveConcierge -->|Triggers UI Updates| user
+
+    subagent_LiveConcierge -->|Requests Imagery| subagent_Visual
+    subagent_Visual -->|Streams Images| user
+
+    subagent_LiveConcierge -->|Requests Cinematic Reveal| subagent_Director
+    subagent_Director -->|Streams Scripted Video| user
+
+    user -.->|Disconnects| subagent_Memory
+    subagent_Memory -->|Analyzes Transcript| db_memory
+    db_memory -.->|Injects Persona Next Session| subagent_LiveConcierge
+
+    %% Supply Side Flows
+    captain <-->|Bilingual Voice Intake| subagent_Intake
+    subagent_Intake -->|Extracts JSON| db_pending
+
+    admin -->|Reviews Dashboard| db_pending
+    db_pending -->|Approves Data| db_rag

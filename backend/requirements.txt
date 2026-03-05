@@ -1,0 +1,4 @@
+fastapi==0.109.2
+uvicorn==0.27.0
+pydantic==2.6.1
+google-genai==0.3.0google-cloud-firestore==2.16.0

@@ -1,0 +1,47 @@
+{
+    "contacts": {
+        "boat captain": [
+            {
+                "name": "Captain Jose",
+                "specialty": "Zapatilla & Snorkeling",
+                "whatsapp": "+507 6123-4567",
+                "pricing_policy": "$25 per person (Group)",
+                "availability": "Daytime only"
+            },
+            {
+                "name": "Captain Miguel",
+                "specialty": "Private Charters & Starfish Beach",
+                "whatsapp": "+507 6789-0123",
+                "pricing_policy": "$150 per day (Private). Night rate is double.",
+                "availability": "24/7"
+            }
+        ],
+        "surf lesson": [
+            {
+                "name": "Bocas Surf Academy (Leo)",
+                "specialty": "Beginner to Intermediate (Carenero)",
+                "whatsapp": "+507 6987-6543",
+                "pricing_policy": "$50/hour. Includes board rental.",
+                "availability": "Depends on swell"
+            }
+        ],
+        "sloth guide": [
+            {
+                "name": "Guide Maria (Green Path Tours)",
+                "specialty": "Sloth Spotting & Jungle Treks (Bastimentos)",
+                "whatsapp": "+507 6555-1212",
+                "pricing_policy": "$30/tour. Max 8 people.",
+                "availability": "Morning preferred"
+            }
+        ],
+        "diving": [
+            {
+                "name": "Bocas Dive Center",
+                "specialty": "PADI Certification & Wreck Dives",
+                "whatsapp": "+507 6333-9999",
+                "pricing_policy": "$80 per 2-tank dive. Discounts for groups of 4+.",
+                "availability": "Daily at 8am and 1pm"
+            }
+        ]
+    }
+}

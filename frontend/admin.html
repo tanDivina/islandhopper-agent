@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Island Hopper - Admin Review</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --deep-emerald: #061F1A; --emerald-light: #0B2D26; --brushed-gold: #D4AF37; --text-main: #E0E0E0; --white: #FFFFFF; }
+        body { background-color: var(--deep-emerald); color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem; margin: 0; }
+        h1 { font-family: 'Outfit'; color: var(--brushed-gold); border-bottom: 1px solid var(--brushed-gold); padding-bottom: 1rem; }
+        
+        .pending-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem; margin-top: 2rem; }
+        .card { background: var(--emerald-light); border: 1px solid var(--brushed-gold); padding: 1.5rem; border-radius: 8px; }
+        .card h3 { color: var(--white); margin: 0 0 1rem 0; font-family: 'Outfit'; }
+        .badge { background: rgba(212, 175, 55, 0.2); color: var(--brushed-gold); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; text-transform: uppercase; float: right; }
+        .field { margin-bottom: 0.8rem; font-size: 0.9rem; }
+        .field strong { color: var(--brushed-gold); display: block; margin-bottom: 0.2rem; }
+        .policy-box { background: rgba(0,0,0,0.3); padding: 1rem; border-left: 2px solid var(--brushed-gold); font-family: monospace; font-size: 0.85rem; margin-top: 1rem; white-space: pre-wrap; }
+        
+        .actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        button { flex: 1; padding: 0.8rem; border: none; border-radius: 4px; font-family: 'Outfit'; font-weight: bold; cursor: pointer; transition: opacity 0.3s; }
+        button:hover { opacity: 0.8; }
+        .btn-approve { background: #4CAF50; color: white; }
+        .btn-reject { background: #F44336; color: white; }
+        .empty { text-align: center; margin-top: 5rem; color: var(--brushed-gold); opacity: 0.5; font-size: 1.5rem; }
+    </style>
+</head>
+<body>
+    <h1>Pending Partner Approvals</h1>
+    <div id="grid" class="pending-grid"></div>
+
+    <script>
+        async function fetchPending() {
+            const res = await fetch('/api/admin/pending');
+            const data = await res.json();
+            renderGrid(data);
+        }
+
+        function renderGrid(items) {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="empty">No pending submissions.</div>';
+                return;
+            }
+
+            items.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <span class="badge">${item.category}</span>
+                    <h3>${item.name}</h3>
+                    <div class="field"><strong>WhatsApp:</strong> ${item.whatsapp}</div>
+                    <div class="field"><strong>Specialty:</strong> ${item.specialty}</div>
+                    <div class="field">
+                        <strong>AI Pricing Policy Context:</strong>
+                        <div class="policy-box">${item.pricing_policy}</div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-approve" onclick="handleAction(${index}, 'approve')">Approve</button>
+                        <button class="btn-reject" onclick="handleAction(${index}, 'reject')">Reject</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function handleAction(index, action) {
+            const res = await fetch(`/api/admin/${action}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ index: index })
+            });
+            if (res.ok) {
+                fetchPending(); // refresh
+            } else {
+                alert('Action failed.');
+            }
+        }
+
+        fetchPending();
+    </script>
+</body>
+</html>

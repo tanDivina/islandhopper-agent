@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Island Hopper - Partner Intake</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --deep-emerald: #061F1A;
+            --emerald-light: #0B2D26;
+            --brushed-gold: #D4AF37;
+            --text-main: #E0E0E0;
+            --white: #FFFFFF;
+        }
+        body {
+            background-color: var(--deep-emerald);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .intake-container {
+            background: var(--emerald-light);
+            border: 1px solid var(--brushed-gold);
+            padding: 3rem;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+        }
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--brushed-gold);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+        p.subtitle { margin-bottom: 2rem; opacity: 0.8; }
+        
+        .form-group { margin-bottom: 1.5rem; }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--brushed-gold);
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: var(--white);
+            border-radius: 4px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--brushed-gold);
+        }
+        textarea { resize: vertical; min-height: 120px; }
+        .help-text {
+            display: block;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 0.5rem;
+        }
+        button {
+            background: var(--brushed-gold);
+            color: var(--deep-emerald);
+            border: none;
+            padding: 1rem 2rem;
+            font-family: 'Outfit';
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        button:hover { background: var(--white); }
+        #successMsg { display: none; color: #4CAF50; margin-top: 1rem; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="intake-container">
+        <h1>Join Island Hopper</h1>
+        <p class="subtitle">Connect with travelers by listing your local services.</p>
+        
+        <form id="intakeForm">
+            <div class="form-group">
+                <label>Name or Business Name</label>
+                <input type="text" id="name" required placeholder="e.g. Captain Jose">
+            </div>
+            <div class="form-group">
+                <label>Service Type</label>
+                <select id="serviceCategory">
+                    <option value="boat captain">Boat Captain / Water Taxi</option>
+                    <option value="surf lesson">Surf Instruction</option>
+                    <option value="jungle guide">Jungle / Sloth Guide</option>
+                    <option value="diving">Scuba Diving</option>
+                    <option value="other">Other Experience</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>WhatsApp Number</label>
+                <input type="text" id="whatsapp" required placeholder="+507 6000-0000">
+            </div>
+            <div class="form-group">
+                <label>Specialty or Locations</label>
+                <input type="text" id="specialty" required placeholder="e.g. Zapatilla tours, Bastimentos drops">
+            </div>
+            <div class="form-group">
+                <label>Pricing Policy & Conditions</label>
+                <textarea id="pricing" required placeholder="Explain your rates... e.g. Base rate $20 + $5/hr waiting. Double at night. Max 6 people."></textarea>
+                <span class="help-text">Our AI reads this to quote travelers accurately. Be as detailed as you need.</span>
+            </div>
+            <button type="submit">Submit for Review</button>
+            <div id="successMsg">Application submitted successfully! We will review it shortly.</div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('intakeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.textContent = 'Submitting...';
+            btn.disabled = true;
+
+            const payload = {
+                name: document.getElementById('name').value,
+                category: document.getElementById('serviceCategory').value,
+                whatsapp: document.getElementById('whatsapp').value,
+                specialty: document.getElementById('specialty').value,
+                pricing_policy: document.getElementById('pricing').value
+            };
+
+            try {
+                const response = await fetch('/api/intake', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (response.ok) {
+                    document.getElementById('intakeForm').reset();
+                    document.getElementById('successMsg').style.display = 'block';
+                    btn.textContent = 'Submit Another';
+                } else {
+                    alert('Failed to submit. Please try again.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error.');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
