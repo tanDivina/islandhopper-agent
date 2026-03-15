@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Island Hopper - Registro por Voz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --deep-emerald: #061F1A; --brushed-gold: #D4AF37; --bocas-turquoise: #00CED1; --white: #FFFFFF; }
+        body { background-color: var(--deep-emerald); color: var(--white); font-family: 'Plus Jakarta Sans', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; padding: 20px; }
+        h1 { font-family: 'Outfit'; color: var(--bocas-turquoise); font-size: 2.5rem; margin-bottom: 1rem; text-shadow: 0 0 15px rgba(0, 206, 209, 0.4); }
+        p { font-size: 1.1rem; opacity: 0.8; max-width: 600px; margin-bottom: 2rem; line-height: 1.6; }
+        
+        .mic-container { margin-bottom: 3rem; position: relative; }
+        .mic-btn {
+            background: none; border: 4px solid var(--bocas-turquoise); color: var(--bocas-turquoise);
+            width: 140px; height: 140px; border-radius: 50%; font-size: 4rem; cursor: pointer;
+            transition: all 0.3s; box-shadow: 0 0 30px rgba(0, 206, 209, 0.3);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .mic-btn.recording { background: var(--bocas-turquoise); color: var(--deep-emerald); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 206, 209, 0.7); } 70% { box-shadow: 0 0 0 30px rgba(0, 206, 209, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 206, 209, 0); } }
+        
+        #status { margin-top: 1.5rem; font-size: 1.2rem; color: var(--brushed-gold); font-weight: bold; min-height: 1.5em; }
+        
+        .nav-group { display: flex; flex-direction: column; gap: 12px; margin-top: 2rem; }
+        .manual-btn { background: rgba(0, 206, 209, 0.1); border: 1px solid var(--bocas-turquoise); color: var(--bocas-turquoise); padding: 12px 24px; border-radius: 30px; cursor: pointer; text-decoration: none; font-family: 'Outfit'; font-weight: 600; transition: all 0.3s; }
+        .manual-btn:hover { background: var(--bocas-turquoise); color: black; }
+    </style>
+</head>
+<body>
+    <h1>Registro por Voz</h1>
+    <p>
+        No pierda tiempo escribiendo. <br>
+        Toque el micrófono y díganos: <b>su nombre, su WhatsApp, qué tours ofrece y sus precios</b>. <br>
+        Nuestra IA se encarga del resto.
+    </p>
+    
+    <div class="mic-container">
+        <button id="micBtn" class="mic-btn">🎙️</button>
+        <div id="status">Listo para escuchar...</div>
+        <button id="sendBtn" style="display:none; margin: 2rem auto 0 auto; background: var(--bocas-turquoise); color: black; border: none; padding: 12px 32px; border-radius: 30px; font-family: 'Outfit'; font-weight: 800; cursor: pointer; box-shadow: 0 0 20px var(--turquoise-glow);">
+            ✅ ENVIAR PARA REVISIÓN
+        </button>
+    </div>
+
+    <div class="nav-group">
+        <a href="intake-es-form.html" class="manual-btn">Prefiero escribir los datos</a>
+        <a href="index.html" class="manual-btn" style="border-color: var(--brushed-gold); color: var(--brushed-gold); background: rgba(212, 175, 55, 0.1);">Volver a la App Principal</a>
+    </div>
+
+    <script>
+        const micBtn = document.getElementById('micBtn');
+        const sendBtn = document.getElementById('sendBtn');
+        const statusText = document.getElementById('status');
+        let ws = null;
+        let isLive = false;
+        let audioContext = null;
+        let processor = null;
+        let stream = null;
+        let hasRecorded = false;
+
+        async function startVoiceIntake() {
+            statusText.textContent = "Conectando...";
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(`${protocol}//${window.location.host}/live/intake`);
+                
+                ws.onopen = () => {
+                    isLive = true;
+                    hasRecorded = true;
+                    micBtn.classList.add('recording');
+                    statusText.textContent = "Escuchando... Cuéntenos sobre su negocio.";
+                    sendBtn.style.display = 'none';
+                    
+                    const source = audioContext.createMediaStreamSource(stream);
+                    processor = audioContext.createScriptProcessor(4096, 1, 1);
+                    source.connect(processor);
+                    processor.connect(audioContext.destination);
+                    
+                    processor.onaudioprocess = (e) => {
+                        if (isLive && ws.readyState === WebSocket.OPEN) {
+                            const inputData = e.inputBuffer.getChannelData(0);
+                            const buffer = new ArrayBuffer(inputData.length * 2);
+                            const view = new DataView(buffer);
+                            for (let i = 0; i < inputData.length; i++) {
+                                const s = Math.max(-1, Math.min(1, inputData[i]));
+                                view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                            }
+                            const bytes = new Uint8Array(buffer);
+                            let binary = '';
+                            for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+                            ws.send(JSON.stringify({ type: "audio", data: btoa(binary) }));
+                        }
+                    };
+                };
+
+                ws.onclose = () => {
+                    if (isLive) {
+                        statusText.textContent = "Procesando su perfil de voz...";
+                    }
+                    stopAll();
+                };
+            } catch (err) {
+                statusText.textContent = "Se requiere acceso al micrófono.";
+            }
+        }
+
+        function stopAll() {
+            isLive = false;
+            micBtn.classList.remove('recording');
+            if (processor) processor.disconnect();
+            if (stream) stream.getTracks().forEach(t => t.stop());
+            if (ws) ws.close();
+            if (hasRecorded) sendBtn.style.display = 'block';
+        }
+
+        micBtn.addEventListener('click', () => {
+            if (isLive) stopAll(); else startVoiceIntake();
+        });
+
+        sendBtn.addEventListener('click', () => {
+            statusText.textContent = "✅ ¡Perfil enviado con éxito! Lo revisaremos pronto.";
+            sendBtn.style.display = 'none';
+            hasRecorded = false;
+        });
+    </script>
+</body>
+</html>

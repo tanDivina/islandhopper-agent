@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Island Hopper - Registro de Socio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --deep-emerald: #061F1A;
+            --emerald-light: #0B2D26;
+            --brushed-gold: #D4AF37;
+            --text-main: #E0E0E0;
+            --white: #FFFFFF;
+        }
+        body {
+            background-color: var(--deep-emerald);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .intake-container {
+            background: var(--emerald-light);
+            border: 1px solid var(--brushed-gold);
+            padding: 2rem;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+        }
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--brushed-gold);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+        p.subtitle { margin-bottom: 2rem; opacity: 0.8; font-size: 0.9rem; }
+        
+        .form-group { margin-bottom: 1.2rem; }
+        label {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: var(--brushed-gold);
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: var(--white);
+            border-radius: 4px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--brushed-gold);
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        .help-text {
+            display: block;
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 0.4rem;
+            line-height: 1.4;
+        }
+        button {
+            background: var(--brushed-gold);
+            color: var(--deep-emerald);
+            border: none;
+            padding: 1rem;
+            font-family: 'Outfit';
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        button:hover { background: var(--white); }
+        .btn-group { display: flex; gap: 10px; margin-top: 1rem; }
+        .secondary-btn {
+            background: rgba(255,255,255,0.05);
+            color: var(--brushed-gold);
+            border: 1px solid var(--brushed-gold);
+            padding: 1rem;
+            font-family: 'Outfit';
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-decoration: none;
+            text-align: center;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        #successMsg { display: none; color: #4CAF50; margin-top: 1rem; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="intake-container">
+        <h1>Únete a Island Hopper</h1>
+        <p class="subtitle">Conéctate con viajeros publicando tus servicios locales.</p>
+        
+        <div style="text-align: center;">
+            <a href="intake-es.html" class="voice-reg-btn">
+                <span>🎙️</span> REGISTRO POR VOZ (SIN ESCRIBIR)
+            </a>
+        </div>
+
+        <form id="intakeForm">
+            <div class="form-group">
+                <label>Nombre o Nombre del Negocio</label>
+                <input type="text" id="name" required placeholder="ej. Capitán José">
+            </div>
+            <div class="form-group">
+                <label>Tipo de Servicio (Seleccione todos los que apliquen)</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 4px; border: 1px solid rgba(212, 175, 55, 0.3);">
+                    <label style="display: flex; align-items: center; gap: 8px; text-transform: none; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" name="service" value="boat captain" style="width: auto;"> Capitán de Bote
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; text-transform: none; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" name="service" value="surf lesson" style="width: auto;"> Instructor de Surf
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; text-transform: none; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" name="service" value="jungle guide" style="width: auto;"> Guía de Jungla
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; text-transform: none; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" name="service" value="diving" style="width: auto;"> Buceo
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; text-transform: none; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" name="service" value="other" style="width: auto;"> Otro
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Número de WhatsApp</label>
+                <input type="text" id="whatsapp" required placeholder="+507 6000-0000">
+            </div>
+            <div class="form-group">
+                <label>Especialidad o Ubicaciones</label>
+                <input type="text" id="specialty" required placeholder="ej. tours a Zapatilla, traslados a Bastimentos">
+            </div>
+            <div class="form-group">
+                <label>Política de Precios y Condiciones</label>
+                <textarea id="pricing" required placeholder="Explica tus tarifas... ej. Tarifa base $20 + $5/hr de espera. Doble por la noche. Máximo 6 personas."></textarea>
+                <span class="help-text">Nuestra IA lee esto para dar presupuestos precisos a los viajeros. Sé tan detallado como necesites.</span>
+            </div>
+            
+            <div class="btn-group">
+                <button type="submit">Enviar para Revisión</button>
+                <a href="index.html" class="secondary-btn">Ir a la App</a>
+            </div>
+            <div id="successMsg">¡Solicitud enviada con éxito! La revisaremos pronto.</div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('intakeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.textContent = 'Enviando...';
+            btn.disabled = true;
+
+            const selectedServices = Array.from(document.querySelectorAll('input[name="service"]:checked')).map(cb => cb.value).join(', ');
+
+            const payload = {
+                name: document.getElementById('name').value,
+                category: selectedServices || 'other',
+                whatsapp: document.getElementById('whatsapp').value,
+                specialty: document.getElementById('specialty').value,
+                pricing_policy: document.getElementById('pricing').value
+            };
+
+            try {
+                const response = await fetch('/api/intake', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (response.ok) {
+                    document.getElementById('intakeForm').reset();
+                    document.getElementById('successMsg').style.display = 'block';
+                    btn.textContent = 'Enviar Otro';
+                } else {
+                    alert('Error al enviar. Por favor, inténtalo de nuevo.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error de conexión.');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

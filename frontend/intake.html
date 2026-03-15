@@ -94,21 +94,38 @@
         <h1>Join Island Hopper</h1>
         <p class="subtitle">Connect with travelers by listing your local services.</p>
         
+        <div style="text-align: center;">
+            <a href="voice-intake.html" class="voice-reg-btn">
+                <span>🎙️</span> REGISTER BY VOICE (NO TYPING)
+            </a>
+        </div>
+
         <form id="intakeForm">
             <div class="form-group">
                 <label>Name or Business Name</label>
                 <input type="text" id="name" required placeholder="e.g. Captain Jose">
             </div>
             <div class="form-group">
-                <label>Service Type</label>
-                <select id="serviceCategory">
-                    <option value="boat captain">Boat Captain / Water Taxi</option>
-                    <option value="surf lesson">Surf Instruction</option>
-                    <option value="jungle guide">Jungle / Sloth Guide</option>
-                    <option value="diving">Scuba Diving</option>
-                    <option value="other">Other Experience</option>
-                </select>
+                <label>Type of Service (Select all that apply)</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 4px; border: 1px solid rgba(212, 175, 55, 0.3);">
+                    <label style="display: flex; align-items: center; gap: 8px; text-transform: none; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" name="service" value="boat captain" style="width: auto;"> Boat Captain
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; text-transform: none; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" name="service" value="surf lesson" style="width: auto;"> Surf Lesson
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; text-transform: none; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" name="service" value="jungle guide" style="width: auto;"> Jungle Guide
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; text-transform: none; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" name="service" value="diving" style="width: auto;"> Diving
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; text-transform: none; font-weight: 400; cursor: pointer;">
+                        <input type="checkbox" name="service" value="other" style="width: auto;"> Other
+                    </label>
+                </div>
             </div>
+
             <div class="form-group">
                 <label>WhatsApp Number</label>
                 <input type="text" id="whatsapp" required placeholder="+507 6000-0000">
@@ -122,7 +139,10 @@
                 <textarea id="pricing" required placeholder="Explain your rates... e.g. Base rate $20 + $5/hr waiting. Double at night. Max 6 people."></textarea>
                 <span class="help-text">Our AI reads this to quote travelers accurately. Be as detailed as you need.</span>
             </div>
-            <button type="submit">Submit for Review</button>
+            <div style="display: flex; gap: 10px; margin-top: 1rem;">
+                <button type="submit">Submit for Review</button>
+                <a href="index.html" style="background: rgba(255,255,255,0.05); color: var(--brushed-gold); border: 1px solid var(--brushed-gold); padding: 1rem 2rem; font-family: 'Outfit'; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; border-radius: 4px; text-decoration: none; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center;">Go to Main App</a>
+            </div>
             <div id="successMsg">Application submitted successfully! We will review it shortly.</div>
         </form>
     </div>
@@ -134,9 +154,11 @@
             btn.textContent = 'Submitting...';
             btn.disabled = true;
 
+            const selectedServices = Array.from(document.querySelectorAll('input[name="service"]:checked')).map(cb => cb.value).join(', ');
+            
             const payload = {
                 name: document.getElementById('name').value,
-                category: document.getElementById('serviceCategory').value,
+                category: selectedServices || 'other',
                 whatsapp: document.getElementById('whatsapp').value,
                 specialty: document.getElementById('specialty').value,
                 pricing_policy: document.getElementById('pricing').value

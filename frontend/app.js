@@ -1,478 +1,352 @@
 let ws = null;
-let mediaRecorder = null;
 let isLive = false;
-let ambientAudio = null;
-let currentImages = [];
-let slideshowInterval;
-let ambientStarted = false;
-let mode = 'voice'; 
-let gestureEnabled = false;
-let gestureStream = null;
+
+// Audio Variables
+let audioContext = null;
+let stream = null;
+let processor = null;
+let nextPlayTime = 0;
+let activeSources = []; // Track active sources for interruption
 
 // DOM Elements
 const introHero = document.getElementById('introHero');
 const startPlanningBtn = document.getElementById('startPlanningBtn');
+const restartBtn = document.getElementById('restartBtn');
 const statusText = document.getElementById('status');
-const emptyState = document.getElementById('emptyState');
-const itineraryGrid = document.getElementById('itineraryGrid');
-const cinematicPlayer = document.getElementById('cinematicPlayer');
-const customCursor = document.getElementById('customCursor');
 const conciergeAvatar = document.getElementById('conciergeAvatar');
-const modeToggle = document.getElementById('modeToggle');
-const modeIcon = document.getElementById('modeIcon');
-const modeText = document.getElementById('modeText');
-const gestureToggle = document.getElementById('gestureToggle');
-const gestureContainer = document.getElementById('gestureContainer');
-const gestureVideo = document.getElementById('gestureVideo');
-const textInputContainer = document.getElementById('textInputContainer');
-const userInput = document.getElementById('userInput');
-const sendBtn = document.getElementById('sendBtn');
-const chatMessages = document.getElementById('chatMessages');
+const visualizerContainer = document.getElementById('visualizerContainer');
+const voiceVisualizer = document.getElementById('voiceVisualizer');
+const resumeAudioBtn = document.getElementById('resumeAudioBtn');
+const itineraryGrid = document.getElementById('itineraryGrid');
+const emptyState = document.getElementById('emptyState');
+const cinematicPlayer = document.getElementById('cinematicPlayer');
+const cinematicTitle = document.getElementById('cinematicTitle');
+const cinematicImageContainer = document.getElementById('cinematicImageContainer');
+const closeCinematicBtn = document.getElementById('closeCinematicBtn');
+const micIndicator = document.getElementById('micIndicator');
+const micDot = document.getElementById('micDot');
 
-// Modal Elements
-const infoModal = document.getElementById('infoModal');
-const modalTitle = document.getElementById('modalTitle');
-const modalBody = document.getElementById('modalBody');
-const closeModal = document.querySelector('.close-modal');
-const navItems = document.querySelectorAll('.nav-item');
+// Discovery Elements
+const discoveryOverlay = document.getElementById('discoveryOverlay');
+const discoveryImage = document.getElementById('discoveryImage');
+const discoveryCaption = document.getElementById('discoveryCaption');
+const discoveryNo = document.getElementById('discoveryNo');
+const discoveryYes = document.getElementById('discoveryYes');
 
-// Data for modals
-const modalData = {
-    'Verified Guides': {
-        title: 'Verified Captains & Guides',
-        content: `
-            <p style="margin-bottom: 1rem;">In Bocas del Toro, most guides are also boat captains. Here are our verified local experts:</p>
-            <ul class="modal-list">
-                <li>
-                    <div>
-                        <strong>Captain Jose</strong><br>
-                        <span style="font-size: 0.8rem; opacity: 0.7;">Expert in Zapatilla & Snorkeling</span>
-                    </div>
-                    <button class="contact-btn">WhatsApp</button>
-                </li>
-                <li>
-                    <div>
-                        <strong>Guide Maria (Green Path)</strong><br>
-                        <span style="font-size: 0.8rem; opacity: 0.7;">Sloth Spotting & Jungle Treks</span>
-                    </div>
-                    <button class="contact-btn">WhatsApp</button>
-                </li>
-                 <li>
-                    <div>
-                        <strong>Captain Leo</strong><br>
-                        <span style="font-size: 0.8rem; opacity: 0.7;">Surf Breaks & Starfish Beach</span>
-                    </div>
-                    <button class="contact-btn">WhatsApp</button>
-                </li>
-            </ul>
-        `
-    },
-    'Local Water Taxis': {
-        title: 'Local Water Taxis',
-        content: `
-             <p style="margin-bottom: 1rem;">Standard rates and verified captains for inter-island transport.</p>
-            <ul class="modal-list">
-                <li>
-                    <div>
-                        <strong>Bocas Town to Carenero</strong><br>
-                        <span style="font-size: 0.8rem; opacity: 0.7;">$2 - $3 USD (Daytime)</span>
-                    </div>
-                </li>
-                <li>
-                    <div>
-                        <strong>Bocas Town to Bastimentos (Old Bank)</strong><br>
-                        <span style="font-size: 0.8rem; opacity: 0.7;">$5 USD (Daytime)</span>
-                    </div>
-                </li>
-                 <li>
-                    <div>
-                        <strong>Bocas Town to Red Frog Beach</strong><br>
-                        <span style="font-size: 0.8rem; opacity: 0.7;">$8 - $10 USD</span>
-                    </div>
-                </li>
-            </ul>
-             <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--brushed-gold);">*Night rates (after 8 PM) are typically double. Always confirm price before boarding.</p>
-        `
-    },
-    'Weather Updates': {
-        title: 'Bocas Weather Outlook',
-        content: `
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">⛅</div>
-                <h3 style="color: var(--white); margin-bottom: 0.5rem;">Partly Cloudy, Brief Showers</h3>
-                <p style="font-size: 1.2rem; color: var(--brushed-gold);">82°F / 28°C</p>
-            </div>
-            <p style="line-height: 1.6;"><strong>Concierge Note:</strong> Tropical weather changes quickly. Morning boat tours to Zapatilla are recommended. Afternoon showers are common but usually pass quickly. Surf conditions at Carenero are currently optimal.</p>
-        `
+let discoveryItems = [];
+let discoveryIndex = 0;
+let discoveryLikes = [];
+
+// Transcript Tracking (Silent)
+let sessionTranscripts = [];
+
+function handleDiscoveryStart(items) {
+    discoveryItems = items;
+    discoveryIndex = 0;
+    discoveryLikes = [];
+    discoveryOverlay.classList.add('active');
+    showNextDiscoveryItem();
+}
+
+function showNextDiscoveryItem() {
+    if (discoveryIndex >= discoveryItems.length) {
+        discoveryOverlay.classList.remove('active');
+        // Send results back to agent
+        ws.send(JSON.stringify({ 
+            type: "discovery_results", 
+            likes: discoveryLikes 
+        }));
+        return;
     }
+    const item = discoveryItems[discoveryIndex];
+    discoveryImage.src = item.url;
+    discoveryCaption.textContent = item.caption;
+}
+
+discoveryYes.onclick = () => {
+    discoveryLikes.push(discoveryItems[discoveryIndex].tags);
+    discoveryIndex++;
+    showNextDiscoveryItem();
 };
 
-navItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-        e.preventDefault();
-        const key = e.target.textContent.trim();
-        if (modalData[key]) {
-            modalTitle.textContent = modalData[key].title;
-            modalBody.innerHTML = modalData[key].content;
-            infoModal.style.display = 'block';
-        }
-    });
-});
+discoveryNo.onclick = () => {
+    discoveryIndex++;
+    showNextDiscoveryItem();
+};
 
-closeModal.addEventListener('click', () => {
-    infoModal.style.display = 'none';
-});
-
-window.addEventListener('click', (e) => {
-    if (e.target == infoModal) {
-        infoModal.style.display = 'none';
-    }
-});
-
-function initAmbientAudio() {
-    if (!ambientAudio) {
-        // Use a more reliable source or silence the error if it fails
-        ambientAudio = new Audio('https://www.soundjay.com/misc/sounds/beach-waves-01.mp3');
-        ambientAudio.loop = true;
-        ambientAudio.volume = 0.3;
-        ambientAudio.onerror = () => { console.warn("Ambient audio failed to load. Proceeding in silence."); };
-    }
-}
-
-function getEmojiForActivity(text) {
-    const lower = text.toLowerCase();
-    if (lower.includes('chocolate') || lower.includes('cacao')) return '🍫';
-    if (lower.includes('sloth') || lower.includes('monkey')) return '🦥';
-    if (lower.includes('beach') || lower.includes('starfish') || lower.includes('zapatilla')) return '🏖️';
-    if (lower.includes('boat') || lower.includes('taxi') || lower.includes('captain')) return '🚤';
-    if (lower.includes('snork') || lower.includes('dive') || lower.includes('fish')) return '🐠';
-    if (lower.includes('surf') || lower.includes('wave')) return '🏄';
-    if (lower.includes('hike') || lower.includes('jungle')) return '🌴';
-    return '📍';
-}
-
-function renderMessage(text, sender) {
-    chatMessages.style.display = 'flex';
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${sender}`;
-    msgDiv.textContent = text;
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function renderImageMessage(base64Image, promptText) {
-    chatMessages.style.display = 'flex';
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message agent image-message`;
-    msgDiv.innerHTML = `
-        <img src="${base64Image}" alt="${promptText}" style="width: 100%; border-radius: 8px; border: 1px solid var(--brushed-gold); margin-bottom: 0.5rem;" />
-        <p style="font-size: 0.8rem; color: var(--brushed-gold); font-style: italic;">Generated: ${promptText}</p>
-    `;
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function renderWhatsAppButton(link, previewText) {
-    chatMessages.style.display = 'flex';
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message agent`;
-    msgDiv.innerHTML = `
-        <p style="margin-bottom: 1rem; font-weight: bold;">I have prepared the message in Spanish for the captain!</p>
-        <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-left: 3px solid var(--brushed-gold); font-style: italic; font-size: 0.9rem; margin-bottom: 1rem;">
-            "${previewText}"
-        </div>
-        <a href="${link}" target="_blank" style="display: inline-block; background: #25D366; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: bold; font-family: 'Outfit';">
-            📱 Send via WhatsApp
-        </a>
-    `;
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function renderItinerary(itinerary) {
-    if (!itinerary || itinerary.length === 0) return;
+function handleDayMarker(dayNumber) {
+    const marker = document.createElement('div');
+    marker.className = 'day-marker-container';
+    marker.style.cssText = "grid-column: 1 / -1; margin-top: 3rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--brushed-gold); padding-bottom: 0.5rem; animation: fadeIn 1s ease;";
+    marker.innerHTML = `<h2 style="font-family:'Outfit'; color:var(--brushed-gold); text-transform:uppercase; letter-spacing:4px; font-size:2rem;">Day ${dayNumber.toString().padStart(2, '0')}</h2>`;
     
+    itineraryGrid.appendChild(marker);
+    itineraryGrid.style.display = 'grid';
     emptyState.style.display = 'none';
-    itineraryGrid.style.display = 'block';
-    itineraryGrid.innerHTML = ''; 
-    currentImages = [];
-
-    itinerary.forEach((day, index) => {
-        const dayNum = (index + 1).toString().padStart(2, '0');
-        const daySection = document.createElement('div');
-        daySection.className = 'itinerary-day-section';
-        
-        const dayMarker = document.createElement('div');
-        dayMarker.className = 'day-marker';
-        dayMarker.textContent = `DAY ${dayNum}`;
-        daySection.appendChild(dayMarker);
-
-        const activitiesWrapper = document.createElement('div');
-        activitiesWrapper.className = 'day-activities-wrapper';
-
-        day.activities.forEach(act => {
-            const desc = act.description || act;
-            const keyword = act.image_keyword || 'tropical-luxury';
-            const emoji = getEmojiForActivity(desc);
-            const imageUrl = `https://picsum.photos/seed/${keyword}/1200/800`;
-            currentImages.push(imageUrl);
-
-            const card = document.createElement('div');
-            card.className = 'day-card';
-            card.innerHTML = `
-                <div class="gesture-badge" style="display:none">Selected</div>
-                <img src="${imageUrl}" class="activity-image" alt="${keyword}" />
-                <div class="activity-header">
-                    <div class="activity-icon">${emoji}</div>
-                    <div class="activity-text">${desc}</div>
-                </div>
-            `;
-            
-            card.addEventListener('click', () => {
-                card.classList.toggle('selected-gesture');
-                const badge = card.querySelector('.gesture-badge');
-                badge.style.display = card.classList.contains('selected-gesture') ? 'block' : 'none';
-            });
-
-            activitiesWrapper.appendChild(card);
-        });
-
-        daySection.appendChild(activitiesWrapper);
-        itineraryGrid.appendChild(daySection);
-    });
+    marker.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function getOrSetTravelerId() {
-    let id = localStorage.getItem('islandHopper_travelerId');
-    if (!id) {
-        id = 'user_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('islandHopper_travelerId', id);
+function handleImage(data, caption, isReal = false, url = null) {
+    const imgContainer = document.createElement('div');
+    imgContainer.className = 'day-card';
+    imgContainer.style.animation = 'fadeIn 0.8s ease forwards';
+    
+    const imgSrc = url ? url : `data:image/png;base64,${data}`;
+    const badgeText = isReal ? "Authentic Local Photo" : "AI-Generated Visual";
+    const badgeColor = isReal ? "#25D366" : "var(--brushed-gold)";
+
+    imgContainer.innerHTML = `
+        <div style="position:relative;">
+            <img src="${imgSrc}" style="width:100%; border-radius:4px; border:1px solid ${badgeColor}; display:block;">
+            <div style="position:absolute; top:10px; right:10px; background:${badgeColor}; color:black; padding:2px 8px; font-size:10px; font-weight:bold; border-radius:10px; text-transform:uppercase;">
+                ${badgeText}
+            </div>
+        </div>
+        <div style="margin-top:15px;">
+            <p style="font-size:14px; line-height:1.5; color:white; font-family:'Outfit', sans-serif;">
+                ${caption || "Visualizing your island escape..."}
+            </p>
+        </div>
+    `;
+    itineraryGrid.appendChild(imgContainer);
+    itineraryGrid.style.display = 'grid';
+    emptyState.style.display = 'none';
+}
+
+function handleWhatsApp(url, text) {
+    const waContainer = document.createElement('div');
+    waContainer.className = 'day-card';
+    waContainer.style.border = '2px solid #25D366';
+    waContainer.innerHTML = `
+        <h3 style="color:#25D366; margin-bottom:10px;">Ready to Book?</h3>
+        <p style="margin-bottom:15px; font-size:14px;">${text}</p>
+        <a href="${url}" target="_blank" style="display:inline-block; background:#25D366; color:white; padding:10px 20px; border-radius:25px; text-decoration:none; font-weight:bold;">Send WhatsApp Message</a>
+    `;
+    itineraryGrid.appendChild(waContainer);
+    itineraryGrid.style.display = 'grid';
+    emptyState.style.display = 'none';
+}
+
+function handleFinalItinerary(title, summary) {
+    cinematicTitle.textContent = title;
+    cinematicImageContainer.innerHTML = `<p style="color:white; font-size:18px; line-height:1.6;">${summary}</p>`;
+    cinematicPlayer.classList.add('active');
+}
+
+closeCinematicBtn.onclick = () => cinematicPlayer.classList.remove('active');
+
+function initAudioContext() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     }
-    return id;
+}
+
+function stopAllAudio() {
+    activeSources.forEach(s => {
+        try { s.stop(); } catch(e) {}
+    });
+    activeSources = [];
+    nextPlayTime = audioContext.currentTime;
+    if (conciergeAvatar) conciergeAvatar.classList.remove('is-speaking');
+}
+
+function playPCM(base64Data) {
+    if (!audioContext) return;
+    if (audioContext.state === 'suspended') audioContext.resume();
+
+    try {
+        const binaryString = atob(base64Data);
+        const len = binaryString.length;
+        const arrayBuffer = new ArrayBuffer(len);
+        const uint8View = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < len; i++) uint8View[i] = binaryString.charCodeAt(i);
+        
+        const dataView = new DataView(arrayBuffer);
+        const numSamples = Math.floor(len / 2);
+        const float32Data = new Float32Array(numSamples);
+        
+        for (let i = 0; i < numSamples; i++) {
+            float32Data[i] = dataView.getInt16(i * 2, true) / 32768.0;
+        }
+        
+        const buffer = audioContext.createBuffer(1, numSamples, 24000);
+        buffer.copyToChannel(float32Data, 0);
+        
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        
+        const now = audioContext.currentTime;
+        if (nextPlayTime < now) nextPlayTime = now;
+        source.start(nextPlayTime);
+        
+        activeSources.push(source);
+        nextPlayTime += buffer.duration;
+
+        if (conciergeAvatar) {
+            conciergeAvatar.classList.add('is-speaking');
+        }
+
+        source.onended = () => {
+            activeSources = activeSources.filter(s => s !== source);
+            if (activeSources.length === 0) {
+                conciergeAvatar.classList.remove('is-speaking');
+            }
+        };
+    } catch (err) { console.error("Playback error", err); }
 }
 
 async function startSession() {
-    statusText.textContent = "Connecting to Island Hopper Concierge...";
+    statusText.textContent = "Connecting...";
+    initAudioContext();
+    if (audioContext.state === 'suspended') await audioContext.resume();
     
-    if (!ambientStarted) {
-        initAmbientAudio();
-        if (ambientAudio) {
-            ambientAudio.play().catch(e => console.warn("Audio blocked."));
-        }
-        ambientStarted = true;
-    }
-
     introHero.classList.add('hidden');
+    restartBtn.style.display = 'flex';
+    micIndicator.style.display = 'flex';
 
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                sampleRate: 16000,
+                channelCount: 1,
+                echoCancellation: true,
+                noiseSuppression: true
+            } 
+        });
+
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.host;
-        const wsUrl = `${protocol}//${host}/live`;
-        
-        ws = new WebSocket(wsUrl); 
+        const wsUrl = `${protocol}//${window.location.host}/live`;
+        ws = new WebSocket(wsUrl);
         
         ws.onopen = () => {
-            // Send Handshake with Traveler ID for Cognitive Memory
-            const travelerId = getOrSetTravelerId();
-            ws.send(JSON.stringify({ type: "init", traveler_id: travelerId }));
-
-            isLive = true;
-            if (ambientAudio) ambientAudio.volume = 0.1;
-            startPlanningBtn.classList.add('recording');
-            statusText.textContent = "Concierge Connected. Start talking or typing.";
+            let traveler_id = localStorage.getItem('traveler_id');
+            if (!traveler_id) {
+                traveler_id = "user_" + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('traveler_id', traveler_id);
+            }
             
-            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-            mediaRecorder.ondataavailable = async (e) => {
-                if (e.data.size > 0 && ws && ws.readyState === WebSocket.OPEN) {
-                     const reader = new FileReader();
-                     reader.readAsDataURL(e.data);
-                     reader.onloadend = () => { 
-                        if (ws && ws.readyState === WebSocket.OPEN) {
-                            const base64 = reader.result.split(',')[1];
-                            ws.send(JSON.stringify({ type: "audio", data: base64 })); 
-                        }
-                     };
+            ws.send(JSON.stringify({ type: "init", traveler_id: traveler_id }));
+            isLive = true;
+            statusText.textContent = "Concierge Listening...";
+            
+            // Visualizer
+            visualizerContainer.style.display = 'flex';
+            const source = audioContext.createMediaStreamSource(stream);
+            const analyser = audioContext.createAnalyser();
+            analyser.fftSize = 64;
+            source.connect(analyser);
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            const ctx = voiceVisualizer.getContext('2d');
+            
+            const draw = () => {
+                if (!isLive) return;
+                requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Mic Activity Feedback
+                let sum = 0;
+                for(let i=0; i<dataArray.length; i++) sum += dataArray[i];
+                const avg = sum / dataArray.length;
+                micDot.style.background = avg > 30 ? '#25D366' : '#666'; // Green if sound detected
+
+                ctx.clearRect(0, 0, voiceVisualizer.width, voiceVisualizer.height);
+                ctx.fillStyle = '#D4AF37';
+                let x = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    const h = (dataArray[i] / 255) * voiceVisualizer.height * 1.5;
+                    ctx.fillRect(x, voiceVisualizer.height - h, 10, h);
+                    x += 15;
                 }
             };
+            draw();
 
-            if (mode === 'voice') {
-                mediaRecorder.start(1000);
-            }
+            // PCM Capture at 16kHz
+            processor = audioContext.createScriptProcessor(4096, 1, 1);
+            source.connect(processor);
+            
+            const dummy = audioContext.createMediaStreamDestination();
+            processor.connect(dummy);
+            
+            processor.onaudioprocess = (e) => {
+                if (isLive && ws?.readyState === WebSocket.OPEN) {
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    const buffer = new ArrayBuffer(inputData.length * 2);
+                    const view = new DataView(buffer);
+                    for (let i = 0; i < inputData.length; i++) {
+                        const s = Math.max(-1, Math.min(1, inputData[i]));
+                        view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                    }
+                    
+                    const bytes = new Uint8Array(buffer);
+                    let binary = '';
+                    for (let i = 0; i < bytes.byteLength; i++) {
+                        binary += String.fromCharCode(bytes[i]);
+                    }
+                    ws.send(JSON.stringify({ type: "audio", data: btoa(binary) }));
+                }
+            };
         };
 
         ws.onmessage = (event) => {
             const msg = JSON.parse(event.data);
-            if (msg.type === "ui_update") {
-                renderItinerary(msg.itinerary);
-            } else if (msg.type === "audio" && mode === 'voice') {
-                playAudioBase64(msg.data);
-            } else if (msg.type === "play_video") {
-                playCinematicVideo(msg.summary);
-            } else if (msg.type === "text_response") {
-                renderMessage(msg.text, 'agent');
-            } else if (msg.type === "image_generated") {
-                renderImageMessage(msg.image_data, msg.prompt);
-            } else if (msg.type === "whatsapp_handoff") {
-                renderWhatsAppButton(msg.link, msg.message);
+            if (msg.type === "audio") {
+                playPCM(msg.data);
+            } else if (msg.type === "discovery_start") {
+                handleDiscoveryStart(msg.items);
+            } else if (msg.type === "day_marker") {
+                handleDayMarker(msg.day);
+            } else if (msg.type === "image") {
+                handleImage(msg.data, msg.caption, msg.is_real, msg.url);
+            } else if (msg.type === "whatsapp") {
+                handleWhatsApp(msg.url, msg.text);
+            } else if (msg.type === "itinerary_finalized") {
+                handleFinalItinerary(msg.title, msg.summary);
+            } else if (msg.type === "interrupted") {
+                stopAllAudio();
             } else if (msg.type === "error") {
-                statusText.textContent = "Concierge Error: " + msg.message;
+                statusText.textContent = "Error: " + msg.message;
             }
         };
 
-        ws.onerror = (error) => {
-            console.error("WebSocket Error:", error);
-            statusText.textContent = "Connection Error.";
-        };
-
-        ws.onclose = (event) => {
+        ws.onclose = () => {
             isLive = false;
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-            startPlanningBtn.classList.remove('recording');
-            if (!statusText.textContent.includes("Error")) {
-                statusText.textContent = "Session ended.";
-            }
+            if (processor) processor.disconnect();
+            if (stream) stream.getTracks().forEach(t => t.stop());
+            visualizerContainer.style.display = 'none';
+            micIndicator.style.display = 'none';
+            statusText.textContent = "Session ended.";
         };
 
-    } catch (err) {
-        console.error("Session start error:", err);
-        statusText.textContent = "Access Denied: Microphone required.";
+    } catch (err) { 
+        statusText.textContent = "Mic access denied."; 
     }
 }
 
-async function toggleGestureMode() {
-    if (!gestureEnabled) {
-        try {
-            gestureStream = await navigator.mediaDevices.getUserMedia({ video: true });
-            gestureVideo.srcObject = gestureStream;
-            gestureContainer.style.display = 'block';
-            gestureEnabled = true;
-            gestureToggle.classList.add('recording');
-            statusText.textContent = "Gesture Control Active.";
-        } catch (err) {
-            alert("Camera permissions required.");
+function restartSession() {
+    if (ws) ws.close();
+    localStorage.removeItem('traveler_id');
+    itineraryGrid.innerHTML = '';
+    itineraryGrid.style.display = 'none';
+    emptyState.style.display = 'block';
+    startSession();
+}
+
+// Attach initial listener
+if (startPlanningBtn) {
+    startPlanningBtn.onclick = () => {
+        console.log("Start button clicked");
+        if (isLive) {
+            if (ws) ws.close();
+        } else {
+            startSession();
         }
-    } else {
-        if (gestureStream) {
-            gestureStream.getTracks().forEach(track => track.stop());
-        }
-        gestureVideo.srcObject = null;
-        gestureContainer.style.display = 'none';
-        gestureEnabled = false;
-        gestureToggle.classList.remove('recording');
-    }
+    };
 }
 
-function sendTextQuery() {
-    const text = userInput.value.trim();
-    if (text && ws && ws.readyState === WebSocket.OPEN) {
-        renderMessage(text, 'user');
-        ws.send(JSON.stringify({ type: "text", data: text }));
-        userInput.value = '';
-    }
-}
+restartBtn.onclick = restartSession;
 
-let audioQueue = Promise.resolve();
-async function playAudioBase64(base64Data) {
-    audioQueue = audioQueue.then(async () => {
-        const audio = new Audio(base64Data);
-        if (conciergeAvatar) conciergeAvatar.classList.add('is-speaking');
-        
-        await new Promise((resolve) => {
-            audio.onended = () => {
-                if (conciergeAvatar) conciergeAvatar.classList.remove('is-speaking');
-                resolve();
-            };
-            audio.onerror = () => {
-                if (conciergeAvatar) conciergeAvatar.classList.remove('is-speaking');
-                resolve();
-            };
-            audio.play().catch((e) => {
-                console.warn("Playback blocked", e);
-                if (conciergeAvatar) conciergeAvatar.classList.remove('is-speaking');
-                resolve();
-            });
-        });
-    });
-}
-
-function playCinematicVideo(summary) {
-    if (currentImages.length === 0) return;
-    const title = document.getElementById('cinematicTitle');
-    const imgContainer = document.getElementById('cinematicImageContainer');
-    title.textContent = summary;
-    imgContainer.innerHTML = '';
-    currentImages.forEach((url, i) => {
-        const img = document.createElement('img');
-        img.src = url;
-        img.className = 'cinematic-img';
-        img.id = `cine-img-${i}`;
-        imgContainer.appendChild(img);
-    });
-    cinematicPlayer.classList.add('active');
-    title.classList.add('active');
-    let currentIdx = 0;
-    document.getElementById(`cine-img-0`).classList.add('active');
-    slideshowInterval = setInterval(() => {
-        const prev = document.getElementById(`cine-img-${currentIdx}`);
-        if (prev) prev.classList.remove('active');
-        currentIdx = (currentIdx + 1) % currentImages.length;
-        const next = document.getElementById(`cine-img-${currentIdx}`);
-        if (next) next.classList.add('active');
-    }, 5000);
-}
-
-// --- Event Listeners ---
-startPlanningBtn.addEventListener('click', () => {
-    if (!isLive) {
-        startSession();
-    } else {
-        if (ws) ws.close();
-    }
-});
-
-modeToggle.addEventListener('click', () => {
-    if (mode === 'voice') {
-        mode = 'text';
-        modeIcon.textContent = '⌨️';
-        modeText.textContent = 'Text Mode';
-        textInputContainer.style.display = 'flex';
-        if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-    } else {
-        mode = 'voice';
-        modeIcon.textContent = '🎙️';
-        modeText.textContent = 'Voice Mode';
-        textInputContainer.style.display = 'none';
-        if (isLive && mediaRecorder && mediaRecorder.state === 'inactive') {
-             mediaRecorder.start(1000);
-        }
-    }
-});
-
-gestureToggle.addEventListener('click', toggleGestureMode);
-sendBtn.addEventListener('click', sendTextQuery);
-userInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendTextQuery();
-});
-
-document.getElementById('closeCinematicBtn').addEventListener('click', () => {
-    cinematicPlayer.classList.remove('active');
-    clearInterval(slideshowInterval);
-});
-
-document.addEventListener('mousemove', (e) => {
-    customCursor.style.left = e.clientX + 'px';
-    customCursor.style.top = e.clientY + 'px';
-});
-
-document.addEventListener('mouseover', (e) => {
-    if (e.target.closest('button') || e.target.closest('.day-card') || e.target.closest('.nav-item')) {
-        customCursor.classList.add('reveal');
-    }
-});
-
-document.addEventListener('mouseout', (e) => {
-    if (e.target.closest('button') || e.target.closest('.day-card') || e.target.closest('.nav-item')) {
-        customCursor.classList.remove('reveal');
-    }
-});
+resumeAudioBtn.onclick = () => {
+    if (audioContext) audioContext.resume();
+    resumeAudioBtn.style.display = 'none';
+};
