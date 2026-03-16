@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Island Hopper: Bocas del Toro Concierge</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏝️</text></svg>">
-    <link rel="stylesheet" href="style.css?v=20260310-14">
+    <link rel="stylesheet" href="style.css?v=20260316">
 
 
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -132,18 +132,42 @@
         </main>
     </div>
 
-    <!-- Cinematic Discovery Session -->
     <div id="discoveryOverlay" class="discovery-overlay">
-        <div class="discovery-card">
-            <img id="discoveryImage" src="" alt="Discovery Preview">
-            <div class="discovery-info">
-                <h3 id="discoveryCaption">Exploring Bocas...</h3>
-                <div class="discovery-controls">
-                    <button id="discoveryNo" class="disc-btn no"><span>👎</span> Pass</button>
-                    <button id="discoveryYes" class="disc-btn yes"><span>❤️</span> Love it</button>
-                </div>
+
+        <div id="moodSelector" class="mood-selector">
+            <h2 class="mood-title">What's your vibe?</h2>
+            <p class="mood-subtitle">Pick one or more to set the tone</p>
+            <div class="mood-options">
+                <button class="mood-chip" data-mood="adventurous"><span class="mood-icon">&#9978;</span> Adventurous</button>
+                <button class="mood-chip" data-mood="relaxed"><span class="mood-icon">&#9775;</span> Relaxed</button>
+                <button class="mood-chip" data-mood="romantic"><span class="mood-icon">&#9829;</span> Romantic</button>
+                <button class="mood-chip" data-mood="family"><span class="mood-icon">&#9786;</span> Family Fun</button>
+                <button class="mood-chip" data-mood="solo-explorer"><span class="mood-icon">&#9978;</span> Solo Explorer</button>
+                <button class="mood-chip" data-mood="foodie"><span class="mood-icon">&#9733;</span> Foodie</button>
             </div>
+            <button id="moodContinueBtn" class="mood-continue-btn" disabled>Continue</button>
         </div>
+
+        <div id="categoryFilters" class="category-filters" style="display:none;">
+            <h2 class="filter-title">What excites you?</h2>
+            <p class="filter-subtitle">Filter what you'll discover</p>
+            <div class="filter-chips">
+                <button class="filter-chip active" data-category="all">All</button>
+                <button class="filter-chip" data-category="adventure">Adventure</button>
+                <button class="filter-chip" data-category="relaxation">Relaxation</button>
+                <button class="filter-chip" data-category="wildlife">Wildlife</button>
+                <button class="filter-chip" data-category="food">Food</button>
+                <button class="filter-chip" data-category="culture">Culture</button>
+            </div>
+            <button id="filterStartBtn" class="mood-continue-btn">Start Swiping</button>
+        </div>
+
+        <div id="cardStack" class="card-stack" style="display:none;">
+            <div id="cardCounter" class="card-counter">1 / 6</div>
+            <video id="gestureVideo" class="gesture-video" autoplay playsinline muted></video>
+            <div id="gestureStatus" class="gesture-status"></div>
+        </div>
+
     </div>
 
     <!-- Cinematic Director Agent Player -->
@@ -166,8 +190,13 @@
         </div>
     </div>
 
-    <script src="app.js?v=20260310-14"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.min.js" crossorigin="anonymous" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.min.js" crossorigin="anonymous" async></script>
 
+    <script src="mood-selector.js?v=20260316"></script>
+    <script src="discovery-swipe.js?v=20260316"></script>
+    <script src="gesture-tracker.js?v=20260316"></script>
+    <script src="app.js?v=20260316"></script>
 
     </body>
     </html>

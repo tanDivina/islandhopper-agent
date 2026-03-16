@@ -46,13 +46,7 @@ const micDot = document.getElementById('micDot');
 
 // Discovery Elements
 const discoveryOverlay = document.getElementById('discoveryOverlay');
-const discoveryImage = document.getElementById('discoveryImage');
-const discoveryCaption = document.getElementById('discoveryCaption');
-const discoveryNo = document.getElementById('discoveryNo');
-const discoveryYes = document.getElementById('discoveryYes');
-
 let discoveryItems = [];
-let discoveryIndex = 0;
 let discoveryLikes = [];
 
 // Transcript Tracking
@@ -62,39 +56,90 @@ const transcriptText = document.getElementById('transcriptText');
 let transcriptBuffer = '';
 let transcriptFlushTimer = null;
 
+var CATEGORY_TAG_MAP = {
+    'adventure': ['adventure', 'snorkeling', 'diving', 'surf', 'kayak', 'hiking'],
+    'relaxation': ['beach', 'remote', 'sunset', 'hammock', 'spa'],
+    'wildlife': ['wildlife', 'sloth', 'dolphin', 'manatee', 'frog', 'bird', 'turtle'],
+    'food': ['food', 'restaurant', 'cuisine', 'seafood', 'chocolate'],
+    'culture': ['culture', 'local', 'history', 'music', 'indigenous', 'art']
+};
+
+function filterByCategory(items, categories) {
+    if (categories.indexOf('all') > -1) return items;
+    var activeTags = {};
+    for (var c = 0; c < categories.length; c++) {
+        var tags = CATEGORY_TAG_MAP[categories[c]] || [];
+        for (var t = 0; t < tags.length; t++) activeTags[tags[t]] = true;
+    }
+    return items.filter(function(item) {
+        return item.tags.some(function(tag) { return activeTags[tag]; });
+    });
+}
+
 function handleDiscoveryStart(items) {
     discoveryItems = items;
-    discoveryIndex = 0;
     discoveryLikes = [];
+
     discoveryOverlay.classList.add('active');
-    showNextDiscoveryItem();
-}
+    document.getElementById('moodSelector').style.display = 'block';
+    document.getElementById('categoryFilters').style.display = 'none';
+    document.getElementById('cardStack').style.display = 'none';
 
-function showNextDiscoveryItem() {
-    if (discoveryIndex >= discoveryItems.length) {
-        discoveryOverlay.classList.remove('active');
-        // Send results back to agent
-        ws.send(JSON.stringify({ 
-            type: "discovery_results", 
-            likes: discoveryLikes 
-        }));
-        return;
+    if (window.IslandHopper && IslandHopper.MoodSelector) {
+        IslandHopper.MoodSelector.resetUI();
+        IslandHopper.MoodSelector.init({
+            onComplete: function(selections) {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'text_query',
+                        text: 'My travel vibes are: ' + selections.moods.join(', ') + '. Keep this in mind for my itinerary.'
+                    }));
+                }
+                var filtered = filterByCategory(discoveryItems, selections.categories);
+                if (filtered.length === 0) filtered = discoveryItems;
+                startSwipeSession(filtered);
+            }
+        });
     }
-    const item = discoveryItems[discoveryIndex];
-    discoveryImage.src = item.url;
-    discoveryCaption.textContent = item.caption;
 }
 
-discoveryYes.onclick = () => {
-    discoveryLikes.push(discoveryItems[discoveryIndex].tags);
-    discoveryIndex++;
-    showNextDiscoveryItem();
-};
+function startSwipeSession(filteredItems) {
+    document.getElementById('moodSelector').style.display = 'none';
+    document.getElementById('cardStack').style.display = 'block';
 
-discoveryNo.onclick = () => {
-    discoveryIndex++;
-    showNextDiscoveryItem();
-};
+    IslandHopper.SwipeEngine.init(filteredItems, {
+        container: document.getElementById('cardStack'),
+        onComplete: function(results) {
+            discoveryLikes = results.likes;
+            discoveryOverlay.classList.remove('active');
+
+            if (IslandHopper.GestureTracker) IslandHopper.GestureTracker.destroy();
+
+            ws.send(JSON.stringify({
+                type: 'discovery_results',
+                likes: discoveryLikes
+            }));
+        },
+        onReaction: function(item, action) {
+            var queries = {
+                'tell-more': 'Tell me more about: ' + item.caption,
+                'how-much': 'How much does it cost to do: ' + item.caption + '?',
+                'add-itinerary': 'Add this to my itinerary: ' + item.caption
+            };
+            askConcierge(queries[action]);
+        }
+    });
+
+    if (window.matchMedia('(hover: hover)').matches && window.IslandHopper && IslandHopper.GestureTracker) {
+        IslandHopper.GestureTracker.init({
+            videoEl: document.getElementById('gestureVideo'),
+            statusEl: document.getElementById('gestureStatus'),
+            onSwipe: function(direction) {
+                IslandHopper.SwipeEngine.triggerSwipe(direction);
+            }
+        });
+    }
+}
 
 function handleDayMarker(dayNumber) {
     const marker = document.createElement('div');
@@ -123,6 +168,7 @@ function handleImage(data, caption, isReal = false, url = null) {
             <div style="position:absolute; top:10px; right:10px; background:${badgeColor}; color:black; padding:2px 8px; font-size:10px; font-weight:bold; border-radius:10px; text-transform:uppercase;">
                 ${badgeText}
             </div>
+            <span class="tap-ask-hint">Tap to ask about this</span>
         </div>
         <div style="margin-top:15px;">
             <p style="font-size:14px; line-height:1.5; color:white; font-family:'Outfit', sans-serif;">
@@ -130,6 +176,12 @@ function handleImage(data, caption, isReal = false, url = null) {
             </p>
         </div>
     `;
+
+    imgContainer.classList.add('tappable');
+    imgContainer.addEventListener('click', function() {
+        askConcierge('Tell me more about this from my itinerary: ' + (caption || 'this activity'));
+    });
+
     itineraryGrid.appendChild(imgContainer);
     itineraryGrid.style.display = 'grid';
     emptyState.style.display = 'none';
@@ -349,6 +401,9 @@ async function startSession() {
             visualizerContainer.style.display = 'none';
             micIndicator.style.display = 'none';
             statusText.textContent = "Session ended.";
+            if (window.IslandHopper && IslandHopper.GestureTracker) {
+                IslandHopper.GestureTracker.destroy();
+            }
         };
 
     } catch (err) { 

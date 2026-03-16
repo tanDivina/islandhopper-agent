@@ -132,26 +132,362 @@ body {
 .discovery-overlay {
     position: fixed; inset: 0; background: rgba(6, 31, 26, 0.95);
     z-index: 2000; display: none; align-items: center; justify-content: center;
+    flex-direction: column;
     backdrop-filter: blur(15px);
 }
 .discovery-overlay.active { display: flex; }
-.discovery-card {
-    width: 90%; max-width: 800px; background: var(--emerald-light);
-    border: 1px solid var(--brushed-gold); border-radius: 12px; overflow: hidden;
+
+/* Mood Selector */
+.mood-selector {
+    text-align: center;
+    padding: 2rem;
+    max-width: 520px;
+    animation: fadeIn 0.6s ease;
 }
-.discovery-card img { width: 100%; height: 450px; object-fit: cover; }
-.discovery-info { padding: 2rem; text-align: center; }
-.discovery-info h3 { font-family: 'Outfit'; color: var(--white); margin-bottom: 1.5rem; font-size: 1.5rem; }
-.discovery-controls { display: flex; gap: 2rem; justify-content: center; }
-.disc-btn {
-    padding: 1rem 2.5rem; border-radius: 40px; border: 2px solid;
-    font-family: 'Outfit'; font-weight: 800; cursor: pointer; transition: all 0.3s;
-    display: flex; align-items: center; gap: 10px;
+.mood-title {
+    font-family: 'Outfit';
+    color: var(--brushed-gold);
+    font-size: 2.4rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
 }
-.disc-btn.no { border-color: var(--hibiscus-coral); color: var(--hibiscus-coral); background: none; }
-.disc-btn.no:hover { background: var(--hibiscus-coral); color: black; }
-.disc-btn.yes { border-color: var(--bocas-turquoise); color: var(--bocas-turquoise); background: none; }
-.disc-btn.yes:hover { background: var(--bocas-turquoise); color: black; }
+.mood-subtitle {
+    color: var(--text-main);
+    opacity: 0.6;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+}
+.mood-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+.mood-chip {
+    background: rgba(212, 175, 55, 0.06);
+    border: 2px solid rgba(212, 175, 55, 0.2);
+    color: var(--text-main);
+    padding: 0.75rem 1.3rem;
+    border-radius: 40px;
+    font-family: 'Outfit';
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.mood-chip:hover { border-color: var(--brushed-gold); background: rgba(212, 175, 55, 0.1); }
+.mood-chip.selected {
+    background: var(--brushed-gold);
+    color: var(--deep-emerald);
+    border-color: var(--brushed-gold);
+    font-weight: 800;
+    box-shadow: 0 0 20px var(--gold-glow);
+}
+.mood-icon { font-size: 1.1rem; }
+.mood-continue-btn {
+    background: var(--bocas-turquoise);
+    color: var(--deep-emerald);
+    border: none;
+    padding: 1rem 3rem;
+    border-radius: 40px;
+    font-family: 'Outfit';
+    font-weight: 800;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.mood-continue-btn:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+}
+.mood-continue-btn:not(:disabled):hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px var(--turquoise-glow);
+}
+
+/* Category Filters */
+.category-filters {
+    text-align: center;
+    padding: 2rem;
+    max-width: 520px;
+    animation: fadeIn 0.6s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.filter-title {
+    font-family: 'Outfit';
+    color: var(--brushed-gold);
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+.filter-subtitle {
+    color: var(--text-main);
+    opacity: 0.6;
+    margin-bottom: 1.5rem;
+}
+.filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+.filter-chip {
+    background: none;
+    border: 2px solid rgba(212, 175, 55, 0.2);
+    color: var(--text-main);
+    padding: 0.55rem 1.2rem;
+    border-radius: 30px;
+    font-family: 'Outfit';
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.filter-chip:hover { border-color: var(--brushed-gold); }
+.filter-chip.active {
+    background: var(--brushed-gold);
+    color: var(--deep-emerald);
+    border-color: var(--brushed-gold);
+}
+
+/* Card Stack */
+.card-stack {
+    position: relative;
+    width: 90%;
+    max-width: 400px;
+    height: 560px;
+    animation: fadeIn 0.5s ease;
+}
+.card-counter {
+    text-align: center;
+    color: var(--brushed-gold);
+    font-family: 'Outfit';
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+/* Individual Swipe Card */
+.swipe-card {
+    position: absolute;
+    top: 30px; left: 0;
+    width: 100%;
+    height: 490px;
+    background: var(--emerald-light);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    transition: box-shadow 0.3s;
+    will-change: transform;
+}
+.swipe-card:active { cursor: grabbing; }
+.swipe-card img {
+    width: 100%;
+    height: 320px;
+    object-fit: cover;
+    pointer-events: none;
+}
+.swipe-card-info {
+    padding: 1rem 1.2rem;
+}
+.swipe-card-info h3 {
+    font-family: 'Outfit';
+    color: var(--white);
+    font-size: 1.15rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+/* Reaction Buttons */
+.swipe-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.reaction-btn {
+    background: rgba(212, 175, 55, 0.08);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    color: var(--text-main);
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-family: 'Outfit';
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+}
+.reaction-btn:hover {
+    background: var(--brushed-gold);
+    color: var(--deep-emerald);
+    border-color: var(--brushed-gold);
+}
+
+/* Swipe Feedback Overlays */
+.swipe-feedback {
+    position: absolute;
+    top: 20px;
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    font-family: 'Outfit';
+    font-weight: 800;
+    font-size: 1.6rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+.swipe-feedback.like {
+    right: 20px;
+    color: #4CAF50;
+    border: 3px solid #4CAF50;
+    transform: rotate(12deg);
+}
+.swipe-feedback.pass {
+    left: 20px;
+    color: var(--hibiscus-coral);
+    border: 3px solid var(--hibiscus-coral);
+    transform: rotate(-12deg);
+}
+
+/* Directional Glow */
+.swipe-card.glow-right {
+    box-shadow: 8px 0 40px rgba(76, 175, 80, 0.5), 0 0 60px rgba(76, 175, 80, 0.15);
+}
+.swipe-card.glow-left {
+    box-shadow: -8px 0 40px rgba(255, 107, 107, 0.5), 0 0 60px rgba(255, 107, 107, 0.15);
+}
+
+/* Card Exit Animations */
+.swipe-card.exit-right {
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.45s;
+    transform: translateX(150%) rotate(20deg) !important;
+    opacity: 0;
+}
+.swipe-card.exit-left {
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.45s;
+    transform: translateX(-150%) rotate(-20deg) !important;
+    opacity: 0;
+}
+
+/* Gesture Camera (Desktop) */
+.gesture-video {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 160px;
+    height: 120px;
+    border-radius: 12px;
+    border: 2px solid var(--brushed-gold);
+    object-fit: cover;
+    z-index: 2100;
+    display: none;
+    transform: scaleX(-1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+.gesture-status {
+    position: fixed;
+    bottom: 148px;
+    right: 20px;
+    width: 160px;
+    color: var(--brushed-gold);
+    font-family: 'Outfit';
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-align: center;
+    z-index: 2100;
+    display: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.gesture-prompt {
+    text-align: center;
+    margin-top: 1.5rem;
+    animation: fadeIn 0.4s ease;
+}
+.gesture-prompt p {
+    color: var(--text-main);
+    font-family: 'Outfit';
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin-bottom: 0.75rem;
+}
+.gesture-prompt-btns {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+.gesture-allow-btn {
+    background: rgba(0, 206, 209, 0.15);
+    border: 1px solid var(--bocas-turquoise);
+    color: var(--bocas-turquoise);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-family: 'Outfit';
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.gesture-allow-btn:hover {
+    background: var(--bocas-turquoise);
+    color: var(--deep-emerald);
+}
+.gesture-skip-btn {
+    background: none;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    color: var(--text-main);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-family: 'Outfit';
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: all 0.3s;
+}
+.gesture-skip-btn:hover { opacity: 1; }
+
+/* Tap-to-Ask on Itinerary Images */
+.day-card.tappable {
+    position: relative;
+    cursor: pointer;
+}
+.tap-ask-hint {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(212, 175, 55, 0.85);
+    color: var(--deep-emerald);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    font-family: 'Outfit';
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+.day-card.tappable:hover .tap-ask-hint { opacity: 1; }
 
 /* Main App Layout */
 .app-wrapper { display: flex; min-height: 100vh; }
@@ -324,12 +660,14 @@ body {
 
     .day-card { padding: 1rem; margin-bottom: 1rem; }
 
-    .discovery-card { width: 95%; }
-    .discovery-card img { height: 250px; }
-    .discovery-info { padding: 1.2rem; }
-    .discovery-info h3 { font-size: 1.2rem; margin-bottom: 1rem; }
-    .discovery-controls { gap: 1rem; }
-    .disc-btn { padding: 0.8rem 1.5rem; font-size: 0.85rem; }
+    .card-stack { max-width: 95%; height: 510px; }
+    .swipe-card { height: 440px; }
+    .swipe-card img { height: 270px; }
+    .mood-title { font-size: 1.7rem; }
+    .mood-chip { font-size: 0.85rem; padding: 0.6rem 1rem; }
+    .filter-title { font-size: 1.5rem; }
+    .gesture-video, .gesture-status, .gesture-prompt { display: none !important; }
+    .day-card.tappable .tap-ask-hint { opacity: 0.7; }
 
     .close-cinematic { top: 1rem; right: 1rem; padding: 0.6rem 1rem; font-size: 0.8rem; }
     .cinematic-title { font-size: 1.6rem; }
@@ -358,7 +696,10 @@ body {
     .itinerary-grid { gap: 0.75rem; }
     .day-card { padding: 0.75rem; }
 
-    .discovery-card img { height: 180px; }
-    .disc-btn { padding: 0.6rem 1rem; font-size: 0.8rem; }
+    .card-stack { height: 470px; }
+    .swipe-card { height: 400px; }
+    .swipe-card img { height: 230px; }
+    .mood-options { gap: 0.5rem; }
+    .mood-chip { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
     .day-marker-title { font-size: 1.2rem; letter-spacing: 1px; }
 }
