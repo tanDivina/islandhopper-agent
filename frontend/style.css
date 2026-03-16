@@ -37,10 +37,24 @@ body {
 
 .concierge-avatar {
     position: relative; width: 120px; height: 120px; border-radius: 50%;
-    padding: 4px; background: var(--brushed-gold);
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); margin: 0 auto 1.5rem auto;
+    padding: 4px;
+    background: linear-gradient(135deg, var(--bocas-turquoise), var(--brushed-gold), var(--hibiscus-coral));
+    box-shadow: 0 0 20px rgba(0, 206, 209, 0.3), 0 0 40px rgba(212, 175, 55, 0.15);
+    margin: 0 auto 1.5rem auto;
+    transition: box-shadow 0.4s ease, transform 0.3s ease;
 }
-.concierge-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 3px solid var(--deep-emerald); }
+.concierge-avatar img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+    border: 3px solid var(--deep-emerald);
+}
+.concierge-avatar.is-speaking {
+    animation: speakingPulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 25px rgba(0, 206, 209, 0.5), 0 0 50px rgba(212, 175, 55, 0.3), 0 0 80px rgba(255, 107, 107, 0.15);
+}
+@keyframes speakingPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(0, 206, 209, 0.5), 0 0 50px rgba(212, 175, 55, 0.3); }
+    50% { transform: scale(1.06); box-shadow: 0 0 35px rgba(0, 206, 209, 0.7), 0 0 70px rgba(212, 175, 55, 0.4), 0 0 100px rgba(255, 107, 107, 0.2); }
+}
 
 /* Landing Page */
 .intro-hero {
