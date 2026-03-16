@@ -1,55 +1,145 @@
 graph TD
-    %% Core Architecture Visualization for Island Hopper
-    
-    subgraph Traveler App
-        user([Traveler])
-    end
+    %% Island Hopper - Full Architecture (Updated)
 
-    subgraph Supply Side
+    subgraph Users
+        traveler([Traveler])
         captain([Local Captain])
         admin([System Admin])
     end
 
-    subgraph Core Agents
-        subagent_LiveConcierge[("🎙️ Live Concierge Agent
-(Gemini 2.5 Flash Native)")]
-        subagent_Intake[("🤝 Captain Intake Agent
-(Gemini 2.5 Flash Native)")]
+    subgraph Frontend ["Frontend (Static HTML/JS)"]
+        fe_main["index.html<br/>Concierge UI"]
+        fe_intake_en["intake.html<br/>Captain Form (EN)"]
+        fe_intake_es["intake-es-form.html<br/>Captain Form (ES)"]
+        fe_voice_en["voice-intake.html<br/>Voice Intake (EN)"]
+        fe_voice_es["intake-es.html<br/>Voice Intake (ES)"]
+        fe_admin["admin.html<br/>Review Dashboard"]
+
+        subgraph Discovery Engine
+            fe_mood["mood-selector.js<br/>6 Moods"]
+            fe_swipe["discovery-swipe.js<br/>Card Swiping"]
+            fe_gesture["gesture-tracker.js<br/>MediaPipe Hands"]
+            fe_map["map.js<br/>Leaflet Map"]
+        end
     end
 
-    subgraph Background Agents
-        subagent_Memory[("🧠 Cognitive Memory Agent
-(Gemini 3.1 Flash-Lite)")]
-        subagent_Director[("🎬 Director Agent
-(Gemini 3.1 Flash-Lite)")]
-        subagent_Visual[("📸 Visual Creator Agent
-(Imagen 3)")]
+    subgraph Backend ["FastAPI Backend (Cloud Run)"]
+        subgraph WebSocket Endpoints
+            ws_live["/live<br/>Main Concierge WS"]
+            ws_intake["/live/partner-intake<br/>Voice Intake WS"]
+            ws_review["/live/admin-review<br/>Review Agent WS"]
+        end
+
+        subgraph REST Endpoints
+            api_intake["POST /api/intake<br/>Form Submission"]
+            api_pending["GET /api/admin/pending<br/>Fetch Queue"]
+            api_approve["POST /api/admin/approve<br/>Direct Approve"]
+            api_reject["POST /api/admin/reject<br/>Direct Reject"]
+            api_vet["POST /api/admin/vet<br/>Generate Questions"]
+        end
     end
 
-    subgraph Google Cloud Firestore
-        db_rag[(Knowledge Base)]
-        db_pending[(Pending Intake)]
-        db_memory[(Traveler Profiles)]
+    subgraph AI Agents ["Gemini AI Agents (Google ADK)"]
+        agent_concierge[("IslandHopper Agent<br/>gemini-live-2.5-flash")]
+        agent_intake[("IntakeAgent<br/>gemini-live-2.5-flash")]
+        agent_review[("ReviewAgent<br/>gemini-live-2.5-flash")]
     end
 
-    %% Traveler Flows
-    user <-->|Voice/Text via WebSockets| subagent_LiveConcierge
-    subagent_LiveConcierge <-->|Queries Rates| db_rag
-    subagent_LiveConcierge -->|Triggers UI Updates| user
+    subgraph Agent Tools
+        tool_discovery["trigger_visual_discovery"]
+        tool_daymarker["add_day_marker"]
+        tool_image["generate_activity_image"]
+        tool_contact["get_verified_local_contact"]
+        tool_whatsapp["generate_whatsapp_handoff"]
+        tool_finalize["finalize_itinerary"]
+        tool_submit["submit_partner_interview"]
+        tool_fetch["fetch_pending_submissions"]
+        tool_details["get_submission_details"]
+        tool_approve_tool["approve_captain"]
+        tool_reject_tool["reject_captain"]
+        tool_card["send_review_card"]
+    end
 
-    subagent_LiveConcierge -->|Requests Imagery| subagent_Visual
-    subagent_Visual -->|Streams Images| user
+    subgraph Google AI Models
+        model_live["gemini-live-2.5-flash-native-audio<br/>Real-time Voice"]
+        model_pro["gemini-3.1-pro-preview<br/>Reasoning & Vetting"]
+        model_lite["gemini-3.1-flash-lite-preview<br/>Memory Extraction"]
+        model_imagen["imagen-3.0-generate-002<br/>Image Generation"]
+        model_embed["gemini-embedding-2-preview<br/>768-dim Vectors"]
+    end
 
-    subagent_LiveConcierge -->|Requests Cinematic Reveal| subagent_Director
-    subagent_Director -->|Streams Scripted Video| user
+    subgraph Firestore ["Google Cloud Firestore"]
+        db_kb[("knowledge_base<br/>Verified Captains")]
+        db_pending[("partner_submissions<br/>Pending Applications")]
+        db_assets[("visual_assets<br/>Discovery Images")]
+        db_profiles[("traveler_profiles<br/>Learner Memory")]
+    end
 
-    user -.->|Disconnects| subagent_Memory
-    subagent_Memory -->|Analyzes Transcript| db_memory
-    db_memory -.->|Injects Persona Next Session| subagent_LiveConcierge
+    ext_whatsapp["WhatsApp<br/>wa.me Deep Links"]
 
-    %% Supply Side Flows
-    captain <-->|Bilingual Voice Intake| subagent_Intake
-    subagent_Intake -->|Extracts JSON| db_pending
+    %% Traveler Flow
+    traveler <-->|"Voice/Text (PCM 16kHz)"| fe_main
+    fe_main <-->|WebSocket| ws_live
+    ws_live <--> agent_concierge
+    fe_main --- fe_mood & fe_swipe & fe_gesture & fe_map
 
-    admin -->|Reviews Dashboard| db_pending
-    db_pending -->|Approves Data| db_rag
+    %% Concierge Agent Tools
+    agent_concierge --> tool_discovery & tool_daymarker & tool_image
+    agent_concierge --> tool_contact & tool_whatsapp & tool_finalize
+    tool_discovery --> db_assets
+    tool_image --> db_assets
+    tool_image -.->|"Fallback"| model_imagen
+    tool_contact --> db_kb
+    tool_contact --> model_embed
+    tool_whatsapp --> ext_whatsapp
+    tool_finalize --> model_pro
+
+    %% Memory Flow
+    ws_live -.->|"On Disconnect"| model_lite
+    model_lite --> db_profiles
+    db_profiles -.->|"Inject on Reconnect"| agent_concierge
+
+    %% Captain Intake - Form
+    captain --> fe_intake_en & fe_intake_es
+    fe_intake_en & fe_intake_es -->|POST| api_intake
+    api_intake --> model_embed
+    api_intake --> db_pending
+
+    %% Captain Intake - Voice
+    captain <-->|"Voice (PCM 16kHz)"| fe_voice_en & fe_voice_es
+    fe_voice_en & fe_voice_es <-->|WebSocket| ws_intake
+    ws_intake <--> agent_intake
+    agent_intake --> tool_submit
+    tool_submit --> model_embed
+    tool_submit --> db_pending
+
+    %% Admin Review Flow
+    admin <-->|"Voice/Text"| fe_admin
+    fe_admin <-->|WebSocket| ws_review
+    ws_review <--> agent_review
+
+    %% Admin Direct Actions (REST - bypasses agent)
+    fe_admin -->|"Button Click"| api_approve & api_reject & api_vet
+    api_approve --> db_pending
+    api_approve --> db_kb
+    api_reject --> db_pending
+    api_vet --> model_pro
+
+    %% Review Agent Tools
+    agent_review --> tool_fetch & tool_details & tool_card
+    agent_review --> tool_approve_tool & tool_reject_tool
+    tool_fetch --> db_pending
+    tool_details --> db_pending
+    tool_approve_tool --> db_pending & db_kb
+    tool_reject_tool --> db_pending
+    tool_card -->|"review_card via WS"| fe_admin
+
+    %% Ask Captain Flow
+    api_vet -->|"Questions"| fe_admin
+    fe_admin -->|"WhatsApp Link"| ext_whatsapp
+
+    %% All live agents use same model
+    model_live --- agent_concierge & agent_intake & agent_review
+
+    %% Embedding used for semantic search
+    model_embed --- tool_contact & api_intake & tool_submit
