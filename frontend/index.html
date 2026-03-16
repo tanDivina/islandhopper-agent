@@ -94,9 +94,9 @@
             </div>
 
             <nav class="nav-links">
-                <a href="#" class="nav-item">Verified Guides</a>
-                <a href="#" class="nav-item">Local Water Taxis</a>
-                <a href="#" class="nav-item">Weather Updates</a>
+                <a href="#" class="nav-item" data-topic="guides" onclick="askConcierge('Tell me about verified local guides available for tours.'); return false;">Verified Guides</a>
+                <a href="#" class="nav-item" data-topic="taxis" onclick="askConcierge('What local water taxis are available and what are their rates?'); return false;">Local Water Taxis</a>
+                <a href="#" class="nav-item" data-topic="weather" onclick="askConcierge('What is the current weather and forecast for Bocas del Toro?'); return false;">Weather Updates</a>
             </nav>
 
             <!-- Mode Toggles -->
@@ -114,6 +114,10 @@
         <main class="main-content">
             <div id="visualizerContainer" style="height: 40px; margin-bottom: 10px; display: none; align-items: center; justify-content: center;">
                 <canvas id="voiceVisualizer" width="400" height="40"></canvas>
+            </div>
+
+            <div id="transcriptBar" class="transcript-bar" style="display:none;">
+                <div id="transcriptText" class="transcript-text"></div>
             </div>
 
             <div id="emptyState" class="empty-state">

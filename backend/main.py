@@ -32,7 +32,7 @@ class PartnerSubmission(BaseModel):
     pricing_policy: str
 
 class AdminAction(BaseModel):
-    index: int
+    doc_id: str
 
 app = FastAPI()
 
@@ -95,24 +95,28 @@ async def get_pending_submissions():
 @app.post("/api/admin/approve")
 async def approve_submission(action: AdminAction):
     try:
-        docs = []
-        async for doc in db.collection("partner_submissions").where("status", "==", "pending").stream(): docs.append(doc)
-        if action.index >= len(docs): raise HTTPException(status_code=404, detail="Not found")
-        target = docs[action.index]; data = target.to_dict()
+        doc_ref = db.collection("partner_submissions").document(action.doc_id)
+        doc = await doc_ref.get()
+        if not doc.exists: raise HTTPException(status_code=404, detail="Not found")
+        data = doc.to_dict()
+        if data.get("status") != "pending": raise HTTPException(status_code=409, detail="Already processed")
         await db.collection("knowledge_base").add({"name": data["name"], "category": data["category"], "whatsapp": data["whatsapp"], "specialty": data["specialty"], "pricing_policy": data["pricing_policy"], "embedding": data.get("embedding"), "verified": True})
-        await db.collection("partner_submissions").document(target.id).update({"status": "approved"})
+        await doc_ref.update({"status": "approved"})
         return {"status": "approved"}
+    except HTTPException: raise
     except Exception as e: raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/admin/reject")
 async def reject_submission(action: AdminAction):
     try:
-        docs = []
-        async for doc in db.collection("partner_submissions").where("status", "==", "pending").stream(): docs.append(doc)
-        if action.index >= len(docs): raise HTTPException(status_code=404, detail="Not found")
-        target = docs[action.index]
-        await db.collection("partner_submissions").document(target.id).update({"status": "rejected"})
+        doc_ref = db.collection("partner_submissions").document(action.doc_id)
+        doc = await doc_ref.get()
+        if not doc.exists: raise HTTPException(status_code=404, detail="Not found")
+        data = doc.to_dict()
+        if data.get("status") != "pending": raise HTTPException(status_code=409, detail="Already processed")
+        await doc_ref.update({"status": "rejected"})
         return {"status": "rejected"}
+    except HTTPException: raise
     except Exception as e: raise HTTPException(status_code=500, detail=str(e))
 
 # --- Tools for Intake Agent ---
@@ -342,6 +346,8 @@ async def live_endpoint(websocket: WebSocket):
                 data = await websocket.receive_text()
                 msg = json.loads(data)
                 if msg.get("type") == "audio": live_request_queue.send_realtime(types.Blob(mime_type="audio/pcm;rate=16000", data=base64.b64decode(msg["data"])))
+                elif msg.get("type") == "text_query":
+                    live_request_queue.send_content(types.Content(role="user", parts=[types.Part.from_text(text=msg["text"])]))
                 elif msg.get("type") == "discovery_results":
                     likes = ", ".join([str(l) for l in msg.get("likes", [])])
                     live_request_queue.send_content(types.Content(role="user", parts=[types.Part.from_text(text=f"The discovery session is done. I loved: {likes}. Now suggest a day-by-day plan using the images tool for each spot.")]))

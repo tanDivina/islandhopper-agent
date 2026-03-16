@@ -55,8 +55,12 @@ let discoveryItems = [];
 let discoveryIndex = 0;
 let discoveryLikes = [];
 
-// Transcript Tracking (Silent)
+// Transcript Tracking
 let sessionTranscripts = [];
+const transcriptBar = document.getElementById('transcriptBar');
+const transcriptText = document.getElementById('transcriptText');
+let transcriptBuffer = '';
+let transcriptFlushTimer = null;
 
 function handleDiscoveryStart(items) {
     discoveryItems = items;
@@ -321,8 +325,18 @@ async function startSession() {
                 handleWhatsApp(msg.url, msg.text);
             } else if (msg.type === "itinerary_finalized") {
                 handleFinalItinerary(msg.title, msg.summary);
+            } else if (msg.type === "text_resp") {
+                transcriptBar.style.display = 'flex';
+                transcriptBuffer += msg.text;
+                transcriptText.textContent = transcriptBuffer;
+                clearTimeout(transcriptFlushTimer);
+                transcriptFlushTimer = setTimeout(() => {
+                    sessionTranscripts.push(transcriptBuffer);
+                    transcriptBuffer = '';
+                }, 3000);
             } else if (msg.type === "interrupted") {
                 stopAllAudio();
+                transcriptBuffer = '';
             } else if (msg.type === "error") {
                 statusText.textContent = "Error: " + msg.message;
             }
@@ -364,6 +378,15 @@ if (startPlanningBtn) {
 }
 
 restartBtn.onclick = restartSession;
+
+function askConcierge(question) {
+    if (!isLive || !ws || ws.readyState !== WebSocket.OPEN) {
+        statusText.textContent = "Start a session first, then try again.";
+        return;
+    }
+    closeSidebar();
+    ws.send(JSON.stringify({ type: "text_query", text: question }));
+}
 
 resumeAudioBtn.onclick = () => {
     if (audioContext) audioContext.resume();

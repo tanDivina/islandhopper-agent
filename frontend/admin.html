@@ -55,9 +55,10 @@
                 return;
             }
 
-            items.forEach((item, index) => {
+            items.forEach((item) => {
                 const card = document.createElement('div');
                 card.className = 'card';
+                card.dataset.id = item.id;
                 card.innerHTML = `
                     <span class="badge">${item.category}</span>
                     <h3>${item.name}</h3>
@@ -68,24 +69,46 @@
                         <div class="policy-box">${item.pricing_policy}</div>
                     </div>
                     <div class="actions">
-                        <button class="btn-approve" onclick="handleAction(${index}, 'approve')">Approve</button>
-                        <button class="btn-reject" onclick="handleAction(${index}, 'reject')">Reject</button>
+                        <button class="btn-approve" onclick="confirmAction('${item.id}', '${item.name}', 'approve')">Approve</button>
+                        <button class="btn-reject" onclick="confirmAction('${item.id}', '${item.name}', 'reject')">Reject</button>
                     </div>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        async function handleAction(index, action) {
+        function confirmAction(docId, name, action) {
+            const verb = action === 'approve' ? 'approve' : 'reject';
+            if (!confirm(`Are you sure you want to ${verb} "${name}"?`)) return;
+            handleAction(docId, action);
+        }
+
+        async function handleAction(docId, action) {
+            const card = document.querySelector(`.card[data-id="${docId}"]`);
+            if (card) {
+                const buttons = card.querySelectorAll('button');
+                buttons.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+            }
             const res = await fetch(`/api/admin/${action}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ index: index })
+                body: JSON.stringify({ doc_id: docId })
             });
             if (res.ok) {
-                fetchPending(); // refresh
+                if (card) {
+                    card.style.transition = 'opacity 0.4s, transform 0.4s';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.95)';
+                    setTimeout(() => fetchPending(), 400);
+                } else {
+                    fetchPending();
+                }
             } else {
                 alert('Action failed.');
+                if (card) {
+                    const buttons = card.querySelectorAll('button');
+                    buttons.forEach(b => { b.disabled = false; b.style.opacity = '1'; });
+                }
             }
         }
 

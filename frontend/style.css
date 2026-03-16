@@ -265,6 +265,27 @@ body {
     text-transform: uppercase; letter-spacing: 4px; font-size: 2rem;
 }
 
+/* Live Transcript Bar */
+.transcript-bar {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+}
+.transcript-text {
+    font-size: 0.9rem;
+    color: var(--text-main);
+    line-height: 1.5;
+    opacity: 0.9;
+    font-style: italic;
+    overflow: hidden;
+    max-height: 4.5rem;
+}
+
 /* Empty State */
 .empty-state { text-align: center; padding: 4rem 2rem; }
 .empty-state h2 { font-family: 'Outfit'; color: var(--brushed-gold); margin-bottom: 1rem; font-size: 1.8rem; }
