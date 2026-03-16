@@ -304,6 +304,7 @@ async function startSession() {
             ws.send(JSON.stringify({ type: "init", traveler_id: traveler_id }));
             isLive = true;
             statusText.textContent = "Concierge Listening...";
+            flushPendingQueries();
             
             // Visualizer
             visualizerContainer.style.display = 'flex';
@@ -434,13 +435,24 @@ if (startPlanningBtn) {
 
 restartBtn.onclick = restartSession;
 
+var pendingQueries = [];
+
 function askConcierge(question) {
-    if (!isLive || !ws || ws.readyState !== WebSocket.OPEN) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        closeSidebar();
+        ws.send(JSON.stringify({ type: "text_query", text: question }));
+    } else if (isLive) {
+        pendingQueries.push(question);
+    } else {
         statusText.textContent = "Start a session first, then try again.";
-        return;
     }
-    closeSidebar();
-    ws.send(JSON.stringify({ type: "text_query", text: question }));
+}
+
+function flushPendingQueries() {
+    if (ws && ws.readyState === WebSocket.OPEN && pendingQueries.length > 0) {
+        var q = pendingQueries.shift();
+        ws.send(JSON.stringify({ type: "text_query", text: q }));
+    }
 }
 
 resumeAudioBtn.onclick = () => {

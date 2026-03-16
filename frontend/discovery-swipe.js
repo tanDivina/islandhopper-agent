@@ -93,9 +93,27 @@
         var btns = card.querySelectorAll('.reaction-btn');
         for (var b = 0; b < btns.length; b++) {
             (function(btn) {
-                btn.addEventListener('pointerdown', function(e) { e.stopPropagation(); });
+                btn.addEventListener('pointerdown', function(e) {
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                });
+                btn.addEventListener('pointermove', function(e) {
+                    e.stopPropagation();
+                });
+                btn.addEventListener('pointerup', function(e) {
+                    e.stopPropagation();
+                });
                 btn.addEventListener('click', function(e) {
                     e.stopPropagation();
+                    e.preventDefault();
+                    btn.style.background = 'var(--brushed-gold)';
+                    btn.style.color = 'var(--deep-emerald)';
+                    btn.style.borderColor = 'var(--brushed-gold)';
+                    setTimeout(function() {
+                        btn.style.background = '';
+                        btn.style.color = '';
+                        btn.style.borderColor = '';
+                    }, 800);
                     if (onReactionCb) onReactionCb(item, btn.dataset.action);
                 });
             })(btns[b]);
@@ -168,14 +186,20 @@
 
         if (direction === 'right') {
             likes.push(item.tags);
-            card.classList.add('exit-right');
         } else {
             dislikes.push(item.tags);
+        }
+
+        card.style.transition = '';
+        card.offsetHeight;
+
+        if (direction === 'right') {
+            card.classList.add('exit-right');
+        } else {
             card.classList.add('exit-left');
         }
 
-        card.addEventListener('transitionend', function handler() {
-            card.removeEventListener('transitionend', handler);
+        function advance() {
             card.remove();
             currentIndex++;
             updateCounter();
@@ -185,7 +209,18 @@
             } else {
                 renderVisibleCards();
             }
+        }
+
+        card.addEventListener('transitionend', function handler() {
+            card.removeEventListener('transitionend', handler);
+            advance();
         });
+
+        setTimeout(function() {
+            if (card.parentNode) {
+                advance();
+            }
+        }, 600);
     }
 
     function springBack() {
@@ -204,11 +239,6 @@
 
     function triggerSwipe(direction) {
         if (!activeCard || currentIndex >= items.length) return;
-        activeCard.style.transition = 'none';
-
-        var targetX = direction === 'right' ? SWIPE_THRESHOLD + 50 : -(SWIPE_THRESHOLD + 50);
-        var rotation = targetX * ROTATION_FACTOR;
-        activeCard.style.transform = 'translateX(' + targetX + 'px) rotate(' + rotation + 'deg)';
 
         if (direction === 'right') {
             activeCard.classList.add('glow-right');
