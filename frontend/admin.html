@@ -5,114 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Island Hopper - Admin Review</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --deep-emerald: #061F1A; --emerald-light: #0B2D26; --brushed-gold: #D4AF37; --text-main: #E0E0E0; --white: #FFFFFF; }
-        body { background-color: var(--deep-emerald); color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif; padding: 2rem; margin: 0; }
-        h1 { font-family: 'Outfit'; color: var(--brushed-gold); border-bottom: 1px solid var(--brushed-gold); padding-bottom: 1rem; }
-        
-        .pending-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem; margin-top: 2rem; }
-        .card { background: var(--emerald-light); border: 1px solid var(--brushed-gold); padding: 1.5rem; border-radius: 8px; }
-        .card h3 { color: var(--white); margin: 0 0 1rem 0; font-family: 'Outfit'; }
-        .badge { background: rgba(212, 175, 55, 0.2); color: var(--brushed-gold); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; text-transform: uppercase; float: right; }
-        .field { margin-bottom: 0.8rem; font-size: 0.9rem; }
-        .field strong { color: var(--brushed-gold); display: block; margin-bottom: 0.2rem; }
-        .policy-box { background: rgba(0,0,0,0.3); padding: 1rem; border-left: 2px solid var(--brushed-gold); font-family: monospace; font-size: 0.85rem; margin-top: 1rem; white-space: pre-wrap; }
-        
-        .actions { display: flex; gap: 1rem; margin-top: 1.5rem; }
-        button { flex: 1; padding: 0.8rem; border: none; border-radius: 4px; font-family: 'Outfit'; font-weight: bold; cursor: pointer; transition: opacity 0.3s; }
-        button:hover { opacity: 0.8; }
-        .btn-approve { background: #4CAF50; color: white; }
-        .btn-reject { background: #F44336; color: white; }
-        .empty { text-align: center; margin-top: 5rem; color: var(--brushed-gold); opacity: 0.5; font-size: 1.5rem; }
-
-        @media (max-width: 768px) {
-            body { padding: 1rem; }
-            h1 { font-size: 1.3rem; letter-spacing: 1px; }
-            .pending-grid { grid-template-columns: 1fr; gap: 1rem; }
-            .card { padding: 1rem; }
-            .policy-box { font-size: 0.8rem; padding: 0.75rem; }
-            .actions { flex-direction: column; gap: 0.5rem; }
-        }
-    </style>
+    <link rel="stylesheet" href="admin-style.css">
 </head>
 <body>
-    <h1>Pending Partner Approvals</h1>
-    <div id="grid" class="pending-grid"></div>
+    <div class="admin-layout">
+        <header class="admin-header">
+            <div class="header-brand">
+                <span class="brand-icon">&#x2693;</span>
+                <h1>Captain Review</h1>
+            </div>
+            <div class="header-stats">
+                <span id="pendingCount" class="stat-badge">0 pending</span>
+                <span id="approvedCount" class="stat-badge stat-approved">0 approved</span>
+                <span id="rejectedCount" class="stat-badge stat-rejected">0 rejected</span>
+            </div>
+        </header>
 
-    <script>
-        async function fetchPending() {
-            const res = await fetch('/api/admin/pending');
-            const data = await res.json();
-            renderGrid(data);
-        }
+        <div class="admin-body">
+            <aside class="review-queue" id="reviewQueue">
+                <div class="queue-header">
+                    <h2>Review Queue</h2>
+                </div>
+                <div id="queueList" class="queue-list">
+                    <div class="queue-empty">Start a session to load submissions</div>
+                </div>
+            </aside>
 
-        function renderGrid(items) {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            
-            if (items.length === 0) {
-                grid.innerHTML = '<div class="empty">No pending submissions.</div>';
-                return;
-            }
-
-            items.forEach((item) => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.dataset.id = item.id;
-                card.innerHTML = `
-                    <span class="badge">${item.category}</span>
-                    <h3>${item.name}</h3>
-                    <div class="field"><strong>WhatsApp:</strong> ${item.whatsapp}</div>
-                    <div class="field"><strong>Specialty:</strong> ${item.specialty}</div>
-                    <div class="field">
-                        <strong>AI Pricing Policy Context:</strong>
-                        <div class="policy-box">${item.pricing_policy}</div>
+            <main class="agent-panel">
+                <div class="agent-conversation" id="agentConversation">
+                    <div class="agent-welcome">
+                        <div class="welcome-icon">&#x1F50D;</div>
+                        <h2>Review Agent</h2>
+                        <p>Start a voice session to review pending captain submissions with your AI assistant.</p>
+                        <button id="startReviewBtn" class="start-btn">
+                            <span class="btn-icon">&#x1F3A4;</span>
+                            Start Review Session
+                        </button>
                     </div>
-                    <div class="actions">
-                        <button class="btn-approve" onclick="confirmAction('${item.id}', '${item.name}', 'approve')">Approve</button>
-                        <button class="btn-reject" onclick="confirmAction('${item.id}', '${item.name}', 'reject')">Reject</button>
+                </div>
+
+                <div class="agent-controls" id="agentControls" style="display:none;">
+                    <div class="transcript-area" id="transcriptArea">
+                        <div class="transcript-text" id="transcriptText"></div>
                     </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
+                    <div class="input-row">
+                        <div class="mic-status" id="micStatus">
+                            <span class="mic-dot" id="micDot"></span>
+                            <span id="statusLabel">Listening...</span>
+                        </div>
+                        <input type="text" id="textInput" class="text-input" placeholder="Type a message or use voice...">
+                        <button id="sendTextBtn" class="send-btn-small">Send</button>
+                        <button id="endSessionBtn" class="end-btn">End</button>
+                    </div>
+                </div>
+            </main>
 
-        function confirmAction(docId, name, action) {
-            const verb = action === 'approve' ? 'approve' : 'reject';
-            if (!confirm(`Are you sure you want to ${verb} "${name}"?`)) return;
-            handleAction(docId, action);
-        }
+            <aside class="detail-panel" id="detailPanel">
+                <div class="detail-empty">
+                    <p>Captain details will appear here during review</p>
+                </div>
+            </aside>
+        </div>
+    </div>
 
-        async function handleAction(docId, action) {
-            const card = document.querySelector(`.card[data-id="${docId}"]`);
-            if (card) {
-                const buttons = card.querySelectorAll('button');
-                buttons.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
-            }
-            const res = await fetch(`/api/admin/${action}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ doc_id: docId })
-            });
-            if (res.ok) {
-                if (card) {
-                    card.style.transition = 'opacity 0.4s, transform 0.4s';
-                    card.style.opacity = '0';
-                    card.style.transform = 'scale(0.95)';
-                    setTimeout(() => fetchPending(), 400);
-                } else {
-                    fetchPending();
-                }
-            } else {
-                alert('Action failed.');
-                if (card) {
-                    const buttons = card.querySelectorAll('button');
-                    buttons.forEach(b => { b.disabled = false; b.style.opacity = '1'; });
-                }
-            }
-        }
-
-        fetchPending();
-    </script>
+    <script src="admin-review.js"></script>
 </body>
 </html>
