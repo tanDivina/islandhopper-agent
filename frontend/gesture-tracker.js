@@ -26,6 +26,13 @@
         showCameraPrompt();
     }
 
+    function initCamera(options) {
+        videoEl = options.videoEl;
+        statusEl = options.statusEl;
+        swipeCallback = options.onSwipe;
+        requestCamera();
+    }
+
     function isMobile() {
         return 'ontouchstart' in window && window.innerWidth < 1024;
     }
@@ -186,6 +193,7 @@
     window.IslandHopper = window.IslandHopper || {};
     window.IslandHopper.GestureTracker = {
         init: init,
+        initCamera: initCamera,
         destroy: destroy,
         isActive: function() { return isActive; }
     };

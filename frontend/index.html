@@ -231,7 +231,15 @@
 
     <div id="discoveryOverlay" class="discovery-overlay">
 
-        <div id="moodSelector" class="mood-selector">
+        <div id="discoveryIntro" class="discovery-step">
+            <div class="discovery-step-number">Step 1 of 3</div>
+            <h2 class="discovery-step-title">Set Your Travel Vibe</h2>
+            <p class="discovery-step-desc">We'll personalize your Bocas experience based on what feels right to you.</p>
+            <button id="discoveryIntroBtn" class="mood-continue-btn">Let's Go</button>
+        </div>
+
+        <div id="moodSelector" class="mood-selector" style="display:none;">
+            <div class="discovery-step-number">Step 1 of 3</div>
             <h2 class="mood-title">What's your vibe?</h2>
             <p class="mood-subtitle">Pick one or more to set the tone</p>
             <div class="mood-options">
@@ -246,6 +254,7 @@
         </div>
 
         <div id="categoryFilters" class="category-filters" style="display:none;">
+            <div class="discovery-step-number">Step 2 of 3</div>
             <h2 class="filter-title">What excites you?</h2>
             <p class="filter-subtitle">Filter what you'll discover</p>
             <div class="filter-chips">
@@ -256,7 +265,35 @@
                 <button class="filter-chip" data-category="food">Food</button>
                 <button class="filter-chip" data-category="culture">Culture</button>
             </div>
-            <button id="filterStartBtn" class="mood-continue-btn">Start Swiping</button>
+            <button id="filterStartBtn" class="mood-continue-btn">Next</button>
+        </div>
+
+        <div id="swipeInstructions" class="discovery-step" style="display:none;">
+            <div class="discovery-step-number">Step 3 of 3</div>
+            <h2 class="discovery-step-title">Swipe to Discover</h2>
+            <div class="swipe-instructions-visual">
+                <div class="swipe-demo swipe-demo-left">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" stroke-width="2"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+                    <span class="swipe-label swipe-label-pass">Pass</span>
+                </div>
+                <div class="swipe-demo-card">
+                    <div class="swipe-demo-card-inner"></div>
+                </div>
+                <div class="swipe-demo swipe-demo-right">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2"><path d="M5 12h14M19 12l-7-7M19 12l-7 7"/></svg>
+                    <span class="swipe-label swipe-label-love">Love it</span>
+                </div>
+            </div>
+            <p class="discovery-step-desc">Drag cards left to pass, right to love. You can also tap the buttons on each card.</p>
+            <div id="cameraOptionContainer" class="camera-option-container">
+                <div class="camera-option-divider"><span>or</span></div>
+                <p class="camera-option-text">Use your webcam to swipe with hand gestures</p>
+                <div class="camera-option-btns">
+                    <button id="enableCameraBtn" class="camera-enable-btn">Enable Camera Swipe</button>
+                    <button id="skipCameraBtn" class="camera-skip-btn">Skip, use touch</button>
+                </div>
+            </div>
+            <button id="startSwipingBtn" class="mood-continue-btn" style="display:none;">Start Swiping</button>
         </div>
 
         <div id="cardStack" class="card-stack" style="display:none;">

@@ -76,14 +76,26 @@ function filterByCategory(items, categories) {
     });
 }
 
+var discoveryFilteredItems = [];
+var cameraEnabled = false;
+
 function handleDiscoveryStart(items) {
     discoveryItems = items;
     discoveryLikes = [];
+    discoveryFilteredItems = [];
+    cameraEnabled = false;
 
     discoveryOverlay.classList.add('active');
-    document.getElementById('moodSelector').style.display = 'block';
+    document.getElementById('discoveryIntro').style.display = 'block';
+    document.getElementById('moodSelector').style.display = 'none';
     document.getElementById('categoryFilters').style.display = 'none';
+    document.getElementById('swipeInstructions').style.display = 'none';
     document.getElementById('cardStack').style.display = 'none';
+
+    document.getElementById('discoveryIntroBtn').onclick = function() {
+        document.getElementById('discoveryIntro').style.display = 'none';
+        document.getElementById('moodSelector').style.display = 'block';
+    };
 
     if (window.IslandHopper && IslandHopper.MoodSelector) {
         IslandHopper.MoodSelector.resetUI();
@@ -97,14 +109,50 @@ function handleDiscoveryStart(items) {
                 }
                 var filtered = filterByCategory(discoveryItems, selections.categories);
                 if (filtered.length === 0) filtered = discoveryItems;
-                startSwipeSession(filtered);
+                discoveryFilteredItems = filtered;
+                showSwipeInstructions();
             }
         });
     }
 }
 
+function showSwipeInstructions() {
+    document.getElementById('categoryFilters').style.display = 'none';
+    document.getElementById('swipeInstructions').style.display = 'block';
+
+    var isMobile = 'ontouchstart' in window && window.innerWidth < 1024;
+    var cameraContainer = document.getElementById('cameraOptionContainer');
+    var startBtn = document.getElementById('startSwipingBtn');
+
+    if (isMobile) {
+        cameraContainer.style.display = 'none';
+        startBtn.style.display = 'inline-block';
+    } else {
+        cameraContainer.style.display = 'block';
+        startBtn.style.display = 'none';
+    }
+
+    document.getElementById('enableCameraBtn').onclick = function() {
+        cameraEnabled = true;
+        cameraContainer.style.display = 'none';
+        startBtn.style.display = 'inline-block';
+        startBtn.textContent = 'Start with Camera';
+    };
+
+    document.getElementById('skipCameraBtn').onclick = function() {
+        cameraEnabled = false;
+        cameraContainer.style.display = 'none';
+        startBtn.style.display = 'inline-block';
+        startBtn.textContent = 'Start Swiping';
+    };
+
+    startBtn.onclick = function() {
+        document.getElementById('swipeInstructions').style.display = 'none';
+        startSwipeSession(discoveryFilteredItems);
+    };
+}
+
 function startSwipeSession(filteredItems) {
-    document.getElementById('moodSelector').style.display = 'none';
     document.getElementById('cardStack').style.display = 'block';
 
     IslandHopper.SwipeEngine.init(filteredItems, {
@@ -130,8 +178,8 @@ function startSwipeSession(filteredItems) {
         }
     });
 
-    if (window.matchMedia('(hover: hover)').matches && window.IslandHopper && IslandHopper.GestureTracker) {
-        IslandHopper.GestureTracker.init({
+    if (cameraEnabled && window.IslandHopper && IslandHopper.GestureTracker) {
+        IslandHopper.GestureTracker.initCamera({
             videoEl: document.getElementById('gestureVideo'),
             statusEl: document.getElementById('gestureStatus'),
             onSwipe: function(direction) {

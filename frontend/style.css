@@ -142,6 +142,164 @@ body {
 }
 .discovery-overlay.active { display: flex; }
 
+/* Discovery Step Screens */
+.discovery-step {
+    text-align: center;
+    padding: 2rem;
+    max-width: 520px;
+    animation: fadeIn 0.6s ease;
+}
+.discovery-step-number {
+    font-family: 'Outfit';
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--bocas-turquoise);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 1.2rem;
+    opacity: 0.8;
+}
+.discovery-step-title {
+    font-family: 'Outfit';
+    color: var(--brushed-gold);
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+}
+.discovery-step-desc {
+    color: var(--text-main);
+    opacity: 0.6;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Swipe Instructions Visual */
+.swipe-instructions-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+.swipe-demo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    animation: swipePulse 2s ease-in-out infinite;
+}
+.swipe-demo-left { animation-delay: 0s; }
+.swipe-demo-right { animation-delay: 1s; }
+@keyframes swipePulse {
+    0%, 100% { opacity: 0.5; transform: translateX(0); }
+    50% { opacity: 1; transform: translateX(0); }
+}
+.swipe-label {
+    font-family: 'Outfit';
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+.swipe-label-pass { color: #FF6B6B; }
+.swipe-label-love { color: #4CAF50; }
+.swipe-demo-card {
+    width: 80px;
+    height: 110px;
+    border-radius: 12px;
+    background: var(--emerald-light);
+    border: 2px solid rgba(212, 175, 55, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+.swipe-demo-card-inner {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    background: rgba(212, 175, 55, 0.15);
+    border: 1px dashed rgba(212, 175, 55, 0.3);
+}
+
+/* Camera Option */
+.camera-option-container {
+    margin-top: 1.5rem;
+    padding-top: 0.5rem;
+}
+.camera-option-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.camera-option-divider::before,
+.camera-option-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(212, 175, 55, 0.2);
+}
+.camera-option-divider span {
+    color: var(--text-main);
+    opacity: 0.4;
+    font-family: 'Outfit';
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+.camera-option-text {
+    color: var(--text-main);
+    opacity: 0.6;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    font-family: 'Outfit';
+}
+.camera-option-btns {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.camera-enable-btn {
+    background: rgba(0, 206, 209, 0.12);
+    border: 1.5px solid var(--bocas-turquoise);
+    color: var(--bocas-turquoise);
+    padding: 0.65rem 1.4rem;
+    border-radius: 25px;
+    font-family: 'Outfit';
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.camera-enable-btn:hover {
+    background: var(--bocas-turquoise);
+    color: var(--deep-emerald);
+}
+.camera-skip-btn {
+    background: none;
+    border: 1.5px solid rgba(212, 175, 55, 0.2);
+    color: var(--text-main);
+    opacity: 0.6;
+    padding: 0.65rem 1.4rem;
+    border-radius: 25px;
+    font-family: 'Outfit';
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.camera-skip-btn:hover {
+    border-color: var(--brushed-gold);
+    opacity: 1;
+}
+
 /* Mood Selector */
 .mood-selector {
     text-align: center;
@@ -945,7 +1103,7 @@ body {
     .mood-title { font-size: 1.7rem; }
     .mood-chip { font-size: 0.85rem; padding: 0.6rem 1rem; }
     .filter-title { font-size: 1.5rem; }
-    .gesture-video, .gesture-status, .gesture-prompt { display: none !important; }
+    .gesture-video, .gesture-status, .gesture-prompt, .camera-option-container { display: none !important; }
     .day-card.tappable .tap-ask-hint { opacity: 0.7; }
 
     .close-cinematic { top: 1rem; right: 1rem; padding: 0.6rem 1rem; font-size: 0.8rem; }
@@ -990,4 +1148,7 @@ body {
     .mood-options { gap: 0.5rem; }
     .mood-chip { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
     .day-marker-title { font-size: 1.2rem; letter-spacing: 1px; }
+    .discovery-step-title { font-size: 1.6rem; }
+    .discovery-step-desc { font-size: 0.85rem; }
+    .swipe-instructions-visual { gap: 1rem; }
 }
