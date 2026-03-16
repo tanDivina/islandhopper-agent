@@ -22,11 +22,12 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            padding: 20px;
         }
         .intake-container {
             background: var(--emerald-light);
             border: 1px solid var(--brushed-gold);
-            padding: 3rem;
+            padding: 2rem;
             border-radius: 8px;
             width: 100%;
             max-width: 600px;
@@ -38,21 +39,22 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-bottom: 0.5rem;
+            font-size: 1.8rem;
         }
-        p.subtitle { margin-bottom: 2rem; opacity: 0.8; }
-        
-        .form-group { margin-bottom: 1.5rem; }
+        p.subtitle { margin-bottom: 2rem; opacity: 0.8; font-size: 0.9rem; }
+
+        .form-group { margin-bottom: 1.2rem; }
         label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             color: var(--brushed-gold);
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
         }
         input, select, textarea {
             width: 100%;
-            padding: 1rem;
+            padding: 0.8rem;
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(212, 175, 55, 0.3);
             color: var(--white);
@@ -64,12 +66,13 @@
             outline: none;
             border-color: var(--brushed-gold);
         }
-        textarea { resize: vertical; min-height: 120px; }
+        textarea { resize: vertical; min-height: 100px; }
         .help-text {
             display: block;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             opacity: 0.7;
-            margin-top: 0.5rem;
+            margin-top: 0.4rem;
+            line-height: 1.4;
         }
         button {
             background: var(--brushed-gold);
@@ -86,6 +89,35 @@
             transition: all 0.3s;
         }
         button:hover { background: var(--white); }
+        .btn-group { display: flex; gap: 10px; margin-top: 1rem; }
+        .secondary-btn {
+            background: rgba(255,255,255,0.05);
+            color: var(--brushed-gold);
+            border: 1px solid var(--brushed-gold);
+            padding: 1rem;
+            font-family: 'Outfit';
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-decoration: none;
+            text-align: center;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        .voice-reg-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            background: #00CED1; color: #000000;
+            padding: 14px 28px; border-radius: 40px; text-decoration: none;
+            font-family: 'Outfit'; font-weight: 900;
+            box-shadow: 0 0 30px rgba(0, 206, 209, 0.6);
+            margin-bottom: 2rem; transition: all 0.3s ease; border: none; cursor: pointer;
+        }
+        .voice-reg-btn:hover { transform: scale(1.05); background: var(--white); box-shadow: 0 0 40px rgba(0, 206, 209, 0.6); }
         #successMsg { display: none; color: #4CAF50; margin-top: 1rem; text-align: center; font-weight: bold; }
     </style>
 </head>
@@ -139,9 +171,9 @@
                 <textarea id="pricing" required placeholder="Explain your rates... e.g. Base rate $20 + $5/hr waiting. Double at night. Max 6 people."></textarea>
                 <span class="help-text">Our AI reads this to quote travelers accurately. Be as detailed as you need.</span>
             </div>
-            <div style="display: flex; gap: 10px; margin-top: 1rem;">
+            <div class="btn-group">
                 <button type="submit">Submit for Review</button>
-                <a href="index.html" style="background: rgba(255,255,255,0.05); color: var(--brushed-gold); border: 1px solid var(--brushed-gold); padding: 1rem 2rem; font-family: 'Outfit'; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; border-radius: 4px; text-decoration: none; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center;">Go to Main App</a>
+                <a href="index.html" class="secondary-btn">Go to Main App</a>
             </div>
             <div id="successMsg">Application submitted successfully! We will review it shortly.</div>
         </form>

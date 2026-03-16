@@ -98,6 +98,14 @@
                     };
                 };
 
+                ws.onmessage = (event) => {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === "interrupted") {
+                        if (audioContext) {
+                        }
+                    }
+                };
+
                 ws.onclose = () => {
                     if (isLive) {
                         statusText.textContent = "Processing your voice profile...";
@@ -123,11 +131,17 @@
         });
 
         sendBtn.addEventListener('click', () => {
+            sendBtn.style.display = 'none';
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: "finish" }));
-                statusText.textContent = "✅ Profile submitted! Our team will review your tours shortly.";
-                sendBtn.style.display = 'none';
+                statusText.textContent = "Submitting your profile...";
                 hasRecorded = false;
+                setTimeout(() => {
+                    statusText.textContent = "Profile submitted! Our team will review your info shortly.";
+                    stopAll();
+                }, 3000);
+            } else {
+                statusText.textContent = "Profile submitted! Our team will review your info shortly.";
             }
         });
     </script>

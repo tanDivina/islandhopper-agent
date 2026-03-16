@@ -132,14 +132,17 @@
         });
 
         sendBtn.addEventListener('click', () => {
+            sendBtn.style.display = 'none';
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: "finish" }));
-                statusText.textContent = "✅ ¡Perfil enviado! Nuestro equipo revisará su información pronto.";
-                sendBtn.style.display = 'none';
+                statusText.textContent = "Enviando su perfil...";
                 hasRecorded = false;
+                setTimeout(() => {
+                    statusText.textContent = "Perfil enviado! Nuestro equipo revisara su informacion pronto.";
+                    stopAll();
+                }, 3000);
             } else {
-                statusText.textContent = "✅ ¡Perfil enviado con éxito!";
-                sendBtn.style.display = 'none';
+                statusText.textContent = "Perfil enviado! Nuestro equipo revisara su informacion pronto.";
             }
         });
     </script>
