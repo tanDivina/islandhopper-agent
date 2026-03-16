@@ -48,6 +48,11 @@ body {
 .concierge-avatar .avatar-svg {
     width: 100%; height: 100%; border-radius: 50%;
     border: 3px solid var(--deep-emerald);
+    animation: avatarIdle 4s ease-in-out infinite;
+}
+@keyframes avatarIdle {
+    0%, 100% { filter: brightness(1) drop-shadow(0 0 0 transparent); }
+    50% { filter: brightness(1.04) drop-shadow(0 2px 8px rgba(0, 206, 209, 0.15)); }
 }
 .concierge-avatar.is-speaking {
     animation: speakingPulse 1.5s ease-in-out infinite;
