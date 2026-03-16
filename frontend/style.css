@@ -300,6 +300,39 @@ body {
     opacity: 1;
 }
 
+/* Discovery Complete */
+.discovery-complete-icon {
+    margin-bottom: 1.5rem;
+    animation: fadeIn 0.6s ease;
+}
+.discovery-complete-icon svg {
+    display: inline-block;
+    animation: checkPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both;
+}
+@keyframes checkPop {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.discovery-complete-loader {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+.discovery-complete-loader span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--brushed-gold);
+    animation: loaderDot 1.4s ease-in-out infinite;
+}
+.discovery-complete-loader span:nth-child(2) { animation-delay: 0.2s; }
+.discovery-complete-loader span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes loaderDot {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1.2); }
+}
+
 /* Mood Selector */
 .mood-selector {
     text-align: center;

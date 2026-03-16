@@ -91,6 +91,7 @@ function handleDiscoveryStart(items) {
     document.getElementById('categoryFilters').style.display = 'none';
     document.getElementById('swipeInstructions').style.display = 'none';
     document.getElementById('cardStack').style.display = 'none';
+    document.getElementById('discoveryComplete').style.display = 'none';
 
     document.getElementById('discoveryIntroBtn').onclick = function() {
         document.getElementById('discoveryIntro').style.display = 'none';
@@ -159,14 +160,21 @@ function startSwipeSession(filteredItems) {
         container: document.getElementById('cardStack'),
         onComplete: function(results) {
             discoveryLikes = results.likes;
-            discoveryOverlay.classList.remove('active');
 
             if (IslandHopper.GestureTracker) IslandHopper.GestureTracker.destroy();
+
+            document.getElementById('cardStack').style.display = 'none';
+            document.getElementById('discoveryComplete').style.display = 'block';
 
             ws.send(JSON.stringify({
                 type: 'discovery_results',
                 likes: discoveryLikes
             }));
+
+            setTimeout(function() {
+                document.getElementById('discoveryComplete').style.display = 'none';
+                discoveryOverlay.classList.remove('active');
+            }, 3000);
         },
         onReaction: function(item, action) {
             var queries = {
