@@ -104,6 +104,17 @@ async def approve_submission(action: AdminAction):
         return {"status": "approved"}
     except Exception as e: raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/admin/reject")
+async def reject_submission(action: AdminAction):
+    try:
+        docs = []
+        async for doc in db.collection("partner_submissions").where("status", "==", "pending").stream(): docs.append(doc)
+        if action.index >= len(docs): raise HTTPException(status_code=404, detail="Not found")
+        target = docs[action.index]
+        await db.collection("partner_submissions").document(target.id).update({"status": "rejected"})
+        return {"status": "rejected"}
+    except Exception as e: raise HTTPException(status_code=500, detail=str(e))
+
 # --- Tools for Intake Agent ---
 
 async def submit_partner_interview(name: str, category: str, whatsapp: str, specialty: str, pricing_policy: str):

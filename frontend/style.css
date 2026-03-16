@@ -1,7 +1,7 @@
 :root {
     --deep-emerald: #061F1A;
     --emerald-light: #0B2D26;
-    --brushed-gold: #D4AF37; 
+    --brushed-gold: #D4AF37;
     --bocas-turquoise: #00CED1;
     --hibiscus-coral: #FF6B6B;
     --gold-glow: rgba(212, 175, 55, 0.4);
@@ -12,6 +12,8 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
     background-color: var(--deep-emerald);
@@ -43,8 +45,8 @@ body {
     margin: 0 auto 1.5rem auto;
     transition: box-shadow 0.4s ease, transform 0.3s ease;
 }
-.concierge-avatar img {
-    width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+.concierge-avatar .avatar-svg {
+    width: 100%; height: 100%; border-radius: 50%;
     border: 3px solid var(--deep-emerald);
 }
 .concierge-avatar.is-speaking {
@@ -66,12 +68,26 @@ body {
 .intro-hero.hidden { transform: translateY(-100%); }
 .video-background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.4; }
 
-.intro-content { 
-    position: relative; z-index: 2; text-align: center; width: 100%; 
+.intro-content {
+    position: relative; z-index: 2; text-align: center; width: 100%;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
 .intro-title { font-family: 'Outfit'; font-size: 8rem; color: var(--brushed-gold); text-transform: uppercase; letter-spacing: 12px; margin-bottom: 0.5rem; font-weight: 800; }
 .intro-subtitle { font-family: 'Outfit'; font-size: 2rem; color: var(--white); letter-spacing: 20px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4rem; }
+
+/* Tap to Start */
+.tap-to-start {
+    margin-top: 2rem;
+    color: var(--brushed-gold);
+    letter-spacing: 2px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    animation: gentlePulse 2.5s ease-in-out infinite;
+}
+@keyframes gentlePulse {
+    0%, 100% { opacity: 0.6; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-3px); }
+}
 
 /* Center Mic Button */
 .mic-button {
@@ -86,10 +102,10 @@ body {
 
 /* Intake Page Button - High Contrast */
 .voice-reg-btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 10px; 
-    background: var(--bocas-turquoise); color: #000000 !important; 
-    padding: 16px 32px; border-radius: 40px; text-decoration: none; 
-    font-family: 'Outfit'; font-weight: 900; 
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    background: var(--bocas-turquoise); color: #000000 !important;
+    padding: 16px 32px; border-radius: 40px; text-decoration: none;
+    font-family: 'Outfit'; font-weight: 900;
     box-shadow: 0 0 30px var(--turquoise-glow);
     margin-bottom: 2rem;
     transition: all 0.3s ease;
@@ -133,6 +149,7 @@ body {
     display: flex; align-items: center; gap: 10px;
 }
 .disc-btn.no { border-color: var(--hibiscus-coral); color: var(--hibiscus-coral); background: none; }
+.disc-btn.no:hover { background: var(--hibiscus-coral); color: black; }
 .disc-btn.yes { border-color: var(--bocas-turquoise); color: var(--bocas-turquoise); background: none; }
 .disc-btn.yes:hover { background: var(--bocas-turquoise); color: black; }
 
@@ -168,6 +185,21 @@ body {
     transition: all 0.2s; border: 1px solid transparent;
 }
 .nav-item:hover { background: rgba(212, 175, 55, 0.08); border-color: rgba(212, 175, 55, 0.15); color: var(--brushed-gold); }
+
+/* Sidebar Footer Links */
+.sidebar-footer {
+    margin-top: auto; padding: 1.5rem;
+    border-top: 1px solid rgba(212, 175, 55, 0.1);
+    text-align: center;
+}
+.sidebar-footer-link {
+    color: var(--brushed-gold); text-decoration: none;
+    font-size: 0.7rem; text-transform: uppercase;
+    letter-spacing: 1px; opacity: 0.6;
+    transition: opacity 0.3s; display: block;
+    margin-bottom: 5px;
+}
+.sidebar-footer-link:hover { opacity: 1; }
 
 /* Custom Cursor (desktop only) */
 .custom-cursor { display: none; }
@@ -247,10 +279,8 @@ body {
 /* ===================== RESPONSIVE ===================== */
 
 @media (max-width: 768px) {
-    /* Hamburger visible */
     .mobile-menu-btn { display: flex; }
 
-    /* Sidebar off-canvas */
     .sidebar {
         transform: translateX(-100%);
         transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -259,25 +289,20 @@ body {
     }
     .sidebar.open { transform: translateX(0); }
 
-    /* Main content full width */
     .main-content {
         margin-left: 0 !important;
         padding: 1rem;
         padding-top: 4rem;
     }
 
-    /* Intro hero */
     .intro-title { font-size: 2.8rem; letter-spacing: 4px; }
     .intro-subtitle { font-size: 1rem; letter-spacing: 8px; margin-bottom: 2.5rem; }
     .mic-button { width: 100px; height: 100px; font-size: 2.5rem; border-width: 3px; }
 
-    /* Itinerary grid single column */
     .itinerary-grid { grid-template-columns: 1fr; gap: 1rem; }
 
-    /* Day cards */
     .day-card { padding: 1rem; margin-bottom: 1rem; }
 
-    /* Discovery overlay */
     .discovery-card { width: 95%; }
     .discovery-card img { height: 250px; }
     .discovery-info { padding: 1.2rem; }
@@ -285,28 +310,21 @@ body {
     .discovery-controls { gap: 1rem; }
     .disc-btn { padding: 0.8rem 1.5rem; font-size: 0.85rem; }
 
-    /* Cinematic player */
     .close-cinematic { top: 1rem; right: 1rem; padding: 0.6rem 1rem; font-size: 0.8rem; }
     .cinematic-title { font-size: 1.6rem; }
     .cinematic-content { padding: 1rem; }
 
-    /* Concierge avatar smaller on mobile sidebar */
     .concierge-avatar { width: 80px; height: 80px; margin-bottom: 1rem; }
 
-    /* Logo smaller */
     .logo { font-size: 1.4rem; margin-bottom: 1.2rem; }
 
-    /* Empty state */
     .empty-state { padding: 2rem 1rem; }
     .empty-state h2 { font-size: 1.3rem; }
 
-    /* Day markers */
     .day-marker-title { font-size: 1.4rem; letter-spacing: 2px; }
 
-    /* Voice visualizer */
     #visualizerContainer canvas { width: 100% !important; }
 
-    /* Modal */
     .modal-content { padding: 1.5rem; width: 95%; }
 }
 

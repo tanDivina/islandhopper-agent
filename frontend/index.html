@@ -24,7 +24,7 @@
             <button id="startPlanningBtn" class="mic-button">
                 <span class="icon">🎙️</span>
             </button>
-            <p style="margin-top: 2rem; color: var(--brushed-gold); letter-spacing: 2px;">Tap to Start Planning</p>
+            <p class="tap-to-start">Tap to Start Planning</p>
         </div>
     </div>
 
@@ -38,10 +38,45 @@
             
             <div class="concierge-profile">
                 <div id="conciergeAvatar" class="concierge-avatar">
-                    <img src="https://images.pexels.com/photos/2220316/pexels-photo-2220316.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Island Concierge">
+                    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" class="avatar-svg">
+                        <defs>
+                            <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#8B6914"/>
+                                <stop offset="100%" stop-color="#6B4F10"/>
+                            </linearGradient>
+                            <linearGradient id="shirtGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#F0E6D0"/>
+                                <stop offset="100%" stop-color="#D4C9B0"/>
+                            </linearGradient>
+                            <linearGradient id="hatGrad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#D4AF37"/>
+                                <stop offset="100%" stop-color="#A68A2D"/>
+                            </linearGradient>
+                            <linearGradient id="oceanGrad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#006B6B"/>
+                                <stop offset="100%" stop-color="#004D4D"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="60" cy="60" r="58" fill="url(#oceanGrad)"/>
+                        <ellipse cx="60" cy="95" rx="28" ry="22" fill="url(#shirtGrad)"/>
+                        <line x1="60" y1="78" x2="60" y2="95" stroke="#00CED1" stroke-width="1.5" opacity="0.6"/>
+                        <circle cx="60" cy="52" r="22" fill="url(#skinGrad)"/>
+                        <circle cx="52" cy="49" r="2.5" fill="#2C1810"/>
+                        <circle cx="68" cy="49" r="2.5" fill="#2C1810"/>
+                        <circle cx="53" cy="48" r="0.8" fill="#FFFFFF"/>
+                        <circle cx="69" cy="48" r="0.8" fill="#FFFFFF"/>
+                        <path d="M55 57 Q60 61 65 57" stroke="#2C1810" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                        <ellipse cx="60" cy="24" rx="26" ry="8" fill="url(#hatGrad)"/>
+                        <rect x="44" y="16" width="32" height="12" rx="4" fill="url(#hatGrad)"/>
+                        <rect x="42" y="25" width="36" height="3" rx="1.5" fill="#00CED1"/>
+                        <path d="M20 100 Q25 85 35 95" stroke="#00CED1" stroke-width="1" fill="none" opacity="0.3"/>
+                        <path d="M85 100 Q90 88 100 97" stroke="#00CED1" stroke-width="1" fill="none" opacity="0.3"/>
+                        <circle cx="22" cy="78" r="1" fill="#D4AF37" opacity="0.4"/>
+                        <circle cx="98" cy="82" r="1.2" fill="#D4AF37" opacity="0.3"/>
+                        <circle cx="15" cy="90" r="0.8" fill="#00CED1" opacity="0.3"/>
+                    </svg>
                     <div id="speakingIndicator" class="speaking-indicator"></div>
                 </div>
-
             </div>
 
             <div class="concierge-bar">
@@ -69,9 +104,9 @@
                 <!-- Simplified to voice only for now -->
             </div>
 
-            <div style="margin-top: auto; padding: 1.5rem; border-top: 1px solid rgba(212, 175, 55, 0.1); text-align: center;">
-                <a href="intake.html" style="color: var(--brushed-gold); text-decoration: none; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; transition: opacity 0.3s; display: block; margin-bottom: 5px;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">Partner Intake (EN)</a>
-                <a href="intake-es.html" style="color: var(--brushed-gold); text-decoration: none; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">Registro Capitán (ES)</a>
+            <div class="sidebar-footer">
+                <a href="intake.html" class="sidebar-footer-link">Partner Intake (EN)</a>
+                <a href="intake-es.html" class="sidebar-footer-link">Registro Captain (ES)</a>
             </div>
         </aside>
 
