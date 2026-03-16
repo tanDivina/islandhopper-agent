@@ -1,6 +1,24 @@
 let ws = null;
 let isLive = false;
 
+// Mobile sidebar toggle
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+function openSidebar() {
+    sidebar.classList.add('open');
+    sidebarOverlay.classList.add('active');
+}
+
+function closeSidebar() {
+    sidebar.classList.remove('open');
+    sidebarOverlay.classList.remove('active');
+}
+
+if (mobileMenuBtn) mobileMenuBtn.onclick = openSidebar;
+if (sidebarOverlay) sidebarOverlay.onclick = closeSidebar;
+
 // Audio Variables
 let audioContext = null;
 let stream = null;
@@ -204,6 +222,7 @@ async function startSession() {
     introHero.classList.add('hidden');
     restartBtn.style.display = 'flex';
     micIndicator.style.display = 'flex';
+    closeSidebar();
 
     try {
         stream = await navigator.mediaDevices.getUserMedia({ 
