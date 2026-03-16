@@ -67,13 +67,13 @@
                 stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
                 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                ws = new WebSocket(`${protocol}//${window.location.host}/live/intake`);
+                ws = new WebSocket(`${protocol}//${window.location.host}/live/partner-intake`);
                 
                 ws.onopen = () => {
                     isLive = true;
                     hasRecorded = true;
                     micBtn.classList.add('recording');
-                    statusText.textContent = "Escuchando... Cuéntenos sobre su negocio.";
+                    statusText.textContent = "El Conserje de Island Hopper está escuchando... Cuéntenos sobre su negocio.";
                     sendBtn.style.display = 'none';
                     
                     const source = audioContext.createMediaStreamSource(stream);
@@ -96,6 +96,15 @@
                             ws.send(JSON.stringify({ type: "audio", data: btoa(binary) }));
                         }
                     };
+                };
+
+                ws.onmessage = (event) => {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === "interrupted") {
+                        if (audioContext) {
+                            // Interruption handled by stopping current playback if any
+                        }
+                    }
                 };
 
                 ws.onclose = () => {
@@ -123,9 +132,15 @@
         });
 
         sendBtn.addEventListener('click', () => {
-            statusText.textContent = "✅ ¡Perfil enviado con éxito! Lo revisaremos pronto.";
-            sendBtn.style.display = 'none';
-            hasRecorded = false;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: "finish" }));
+                statusText.textContent = "✅ ¡Perfil enviado! Nuestro equipo revisará su información pronto.";
+                sendBtn.style.display = 'none';
+                hasRecorded = false;
+            } else {
+                statusText.textContent = "✅ ¡Perfil enviado con éxito!";
+                sendBtn.style.display = 'none';
+            }
         });
     </script>
 </body>

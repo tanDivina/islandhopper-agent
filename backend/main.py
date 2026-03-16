@@ -63,11 +63,10 @@ EMBEDDING_MODEL = 'gemini-embedding-2-preview'
 # Shared state per session
 active_websockets = {}
 session_transcripts = {}
-discovery_triggered = set() # To prevent loops
+discovery_triggered = set() 
 
 def cosine_similarity(v1, v2):
-    v1 = np.array(v1)
-    v2 = np.array(v2)
+    v1 = np.array(v1); v2 = np.array(v2)
     return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
 # --- Intake & Admin API ---
@@ -77,8 +76,7 @@ async def partner_intake(submission: PartnerSubmission):
     try:
         text_to_embed = f"Captain: {submission.name}. Category: {submission.category}. Specialty: {submission.specialty}. Pricing: {submission.pricing_policy}"
         res = genai_client.models.embed_content(model=EMBEDDING_MODEL, contents=text_to_embed, config=types.EmbedContentConfig(output_dimensionality=768))
-        embedding = res.embeddings[0].values
-        await db.collection("partner_submissions").add({**submission.dict(), "status": "pending", "embedding": embedding, "submitted_at": firestore.SERVER_TIMESTAMP})
+        await db.collection("partner_submissions").add({**submission.dict(), "status": "pending", "embedding": res.embeddings[0].values, "submitted_at": firestore.SERVER_TIMESTAMP})
         return {"status": "success"}
     except Exception as e: raise HTTPException(status_code=500, detail=str(e))
 
@@ -106,55 +104,108 @@ async def approve_submission(action: AdminAction):
         return {"status": "approved"}
     except Exception as e: raise HTTPException(status_code=500, detail=str(e))
 
-# --- Voice Intake Endpoint ---
+# --- Tools for Intake Agent ---
 
-@app.websocket("/live/intake")
-async def voice_intake_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    audio_buffer = []
+async def submit_partner_interview(name: str, category: str, whatsapp: str, specialty: str, pricing_policy: str):
+    """Submits the final extracted data from a captain interview for review."""
+    logger.info(f"VOICE_INTAKE_SUBMISSION: {name}")
     try:
-        while True:
-            data = await websocket.receive_text()
-            msg = json.loads(data)
-            if msg.get("type") == "audio": audio_buffer.append(base64.b64decode(msg["data"]))
-    except WebSocketDisconnect:
-        if not audio_buffer: return
-        full_audio = b"".join(audio_buffer)
+        text_to_embed = f"Captain: {name}. Category: {category}. Specialty: {specialty}. Pricing: {pricing_policy}"
+        res = genai_client.models.embed_content(model=EMBEDDING_MODEL, contents=text_to_embed, config=types.EmbedContentConfig(output_dimensionality=768))
+        await db.collection("partner_submissions").add({
+            "name": name, "category": category, "whatsapp": whatsapp, 
+            "specialty": specialty, "pricing_policy": pricing_policy,
+            "status": "pending", "embedding": res.embeddings[0].values, 
+            "is_voice": True, "submitted_at": firestore.SERVER_TIMESTAMP
+        })
+        return "SUCCESS: Profile submitted for review."
+    except Exception as e:
+        return f"ERROR: {str(e)}"
+
+# --- Multi-Agent Setup ---
+
+INTAKE_SYSTEM_INSTRUCTION = """
+You are the 'Island Hopper' Partner Onboarding Agent. 
+Your goal is to help local captains and guides register their tours using their voice.
+Persona: Warm, helpful, and patient. Speak the language the user speaks (English or Spanish).
+
+YOUR TASK:
+1. Greet the partner warmly.
+2. Ask for their Name, WhatsApp, the Types of Tours they do, and their Pricing.
+3. Be conversational—don't just list questions. Ask them one by one.
+4. If they interrupt you, stop immediately and address their input.
+5. Once you have all the info, confirm it with them.
+6. When they say 'yes' or 'finish', call 'submit_partner_interview'.
+"""
+
+# Registry Load
+with open(os.path.join(os.path.dirname(__file__), "assets_registry.json"), "r") as f:
+    ASSETS_REGISTRY = json.load(f)
+
+# --- WebSocket Endpoints ---
+
+@app.websocket("/live/partner-intake")
+async def live_partner_intake(websocket: WebSocket):
+    await websocket.accept()
+    
+    intake_agent = Agent(
+        name="IntakeAgent", 
+        model=LIVE_MODEL, 
+        instruction=INTAKE_SYSTEM_INSTRUCTION, 
+        tools=[submit_partner_interview]
+    )
+    runner = Runner(app_name="IntakeApp", agent=intake_agent, session_service=InMemorySessionService(), auto_create_session=True)
+    live_request_queue = LiveRequestQueue()
+    run_config = RunConfig(
+        response_modalities=["AUDIO"], 
+        output_audio_transcription=types.AudioTranscriptionConfig(),
+        speech_config=types.SpeechConfig(voice_config=types.VoiceConfig(prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Aoede")))
+    )
+
+    async def run_session():
         try:
-            prompt = "Extract partner data from voice. JSON: {name, category, whatsapp, specialty, pricing_policy}"
-            analysis = genai_client.models.generate_content(model=PLANNING_MODEL, contents=[types.Part.from_bytes(data=full_audio, mime_type="audio/pcm;rate=16000"), prompt], config=types.GenerateContentConfig(response_mime_type="application/json"))
-            partner_data = json.loads(analysis.text)
-            text_to_embed = f"Captain: {partner_data.get('name')}. Specialty: {partner_data.get('specialty')}. Category: {partner_data.get('category')}. Pricing: {partner_data.get('pricing_policy')}"
-            res = genai_client.models.embed_content(model=EMBEDDING_MODEL, contents=text_to_embed, config=types.EmbedContentConfig(output_dimensionality=768))
-            await db.collection("partner_submissions").add({**partner_data, "status": "pending", "embedding": res.embeddings[0].values, "is_voice": True, "submitted_at": firestore.SERVER_TIMESTAMP})
+            async for event in runner.run_live(user_id="partner", session_id="intake_session", live_request_queue=live_request_queue, run_config=run_config):
+                if event.content and event.content.parts:
+                    for part in event.content.parts:
+                        if part.inline_data:
+                            await websocket.send_text(json.dumps({"type": "audio", "data": base64.b64encode(part.inline_data.data).decode('utf-8')}))
+                if event.interrupted:
+                    await websocket.send_text(json.dumps({"type": "interrupted"}))
         except: pass
 
-# --- Agent Tools ---
+    async def handle_msgs():
+        try:
+            while True:
+                data = await websocket.receive_text()
+                msg = json.loads(data)
+                if msg.get("type") == "audio":
+                    live_request_queue.send_realtime(types.Blob(mime_type="audio/pcm;rate=16000", data=base64.b64decode(msg["data"])))
+                elif msg.get("type") == "finish":
+                    live_request_queue.send_content(types.Content(role="user", parts=[types.Part.from_text(text="I am finished. Please summarize and submit my profile.")]))
+        except WebSocketDisconnect:
+            live_request_queue.close()
+
+    asyncio.create_task(run_session())
+    await handle_msgs()
+
+# --- Main Concierge Tools ---
 
 async def trigger_visual_discovery(traveler_id: str):
-    """Starts a visual slideshow of island activities. ONE TIME ONLY."""
-    if traveler_id in discovery_triggered:
-        return "ERROR: Discovery already completed for this session."
-    
-    logger.info(f"TOOL: trigger_visual_discovery for {traveler_id}")
+    if traveler_id in discovery_triggered: return "Discovery already done."
     ws = active_websockets.get(traveler_id)
-    if not ws: return "Error: Session lost."
-    
-    # Fetch curated discovery assets from Firestore
-    discovery_docs = db.collection("visual_assets").where("tags", "array_contains", "discovery").stream()
+    if not ws: return "Error."
+    docs = db.collection("visual_assets").where("tags", "array_contains", "discovery").stream()
     clean_items = []
-    async for doc in discovery_docs:
-        d = doc.to_dict()
-        clean_items.append({"url": d["url"], "caption": d["caption"], "tags": d["tags"]})
-    
+    async for doc in docs:
+        d = doc.to_dict(); clean_items.append({"url": d["url"], "caption": d["caption"], "tags": d["tags"]})
     discovery_triggered.add(traveler_id)
     await ws.send_text(json.dumps({"type": "discovery_start", "items": clean_items}))
-    return "SUCCESS: Discovery session started. Do not call this tool again."
+    return "SUCCESS."
 
 async def add_day_marker(day_number: int, traveler_id: str):
     ws = active_websockets.get(traveler_id)
     if ws: await ws.send_text(json.dumps({"type": "day_marker", "day": day_number}))
-    return f"SUCCESS: Day {day_number} marker added."
+    return "SUCCESS."
 
 async def get_verified_local_contact(service: str):
     try:
@@ -169,12 +220,12 @@ async def get_verified_local_contact(service: str):
                 if score > 0.6: results.append({"data": d, "score": score})
         results.sort(key=lambda x: x["score"], reverse=True)
         top_matches = [r["data"] for r in results[:3]]
-        return json.dumps(top_matches) if top_matches else f"No verified contacts for {service}."
-    except Exception as e: return f"Error: {str(e)}"
+        return json.dumps(top_matches) if top_matches else "No verified contacts."
+    except: return "Error."
 
 async def generate_activity_image(description: str, traveler_id: str):
     ws = active_websockets.get(traveler_id)
-    if not ws: return "Error: Session lost."
+    if not ws: return "Error."
     try:
         res = genai_client.models.embed_content(model=EMBEDDING_MODEL, contents=description, config=types.EmbedContentConfig(output_dimensionality=768))
         query_vec = res.embeddings[0].values
@@ -187,32 +238,30 @@ async def generate_activity_image(description: str, traveler_id: str):
                 if score > highest_score: highest_score = score; best_match = d
         if highest_score > 0.8 and best_match:
             await ws.send_text(json.dumps({"type": "image", "is_real": True, "url": best_match["url"], "caption": best_match["caption"]}))
-            return "SUCCESS: Highly accurate real photo displayed."
-        
+            return "SUCCESS."
         response = genai_client.models.generate_images(model=IMAGEN_MODEL, prompt=description, config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio='16:9', add_watermark=False))
         if response.generated_images:
-            caption_resp = genai_client.models.generate_content(model=PLANNING_MODEL, contents=f"Luxury caption for: {description}")
             img_b64 = base64.b64encode(response.generated_images[0].image.image_bytes).decode('utf-8')
-            await ws.send_text(json.dumps({"type": "image", "is_real": False, "data": img_b64, "caption": caption_resp.text.strip()}))
-            return "SUCCESS: AI visual generated."
-        return "ERROR: Failed."
-    except Exception as e: return f"ERROR: {str(e)}"
+            await ws.send_text(json.dumps({"type": "image", "is_real": False, "data": img_b64, "caption": "Island Hopper Visual"}))
+            return "SUCCESS."
+        return "ERROR."
+    except: return "ERROR."
 
 async def generate_whatsapp_handoff(captain_name: str, phone_number: str, message_in_spanish: str, traveler_id: str):
     url = f"https://wa.me/{phone_number.replace('+', '').replace(' ', '').replace('-', '')}?text={urllib.parse.quote(message_in_spanish)}"
     ws = active_websockets.get(traveler_id)
     if ws: await ws.send_text(json.dumps({"type": "whatsapp", "url": url, "text": f"Click to message {captain_name} in Spanish."}))
-    return "SUCCESS: WhatsApp link displayed."
+    return "SUCCESS."
 
 async def finalize_itinerary(summary: str, traveler_id: str):
     try:
         res = genai_client.models.generate_content(model=PLANNING_MODEL, contents=f"Cinematic title for: {summary}. Title only.")
         ws = active_websockets.get(traveler_id)
         if ws: await ws.send_text(json.dumps({"type": "itinerary_finalized", "title": res.text.strip(), "summary": summary}))
-        return "SUCCESS: Final view triggered."
-    except Exception as e: return f"ERROR: {str(e)}"
+        return "SUCCESS."
+    except: return "ERROR."
 
-# --- ADK Agent Setup ---
+# --- Main Concierge Endpoint ---
 
 BASE_SYSTEM_INSTRUCTION = """
 You are 'Island Hopper', an Afro-Caribbean island concierge for Bocas del Toro.
@@ -245,11 +294,9 @@ async def live_endpoint(websocket: WebSocket):
         init_msg = json.loads(init_data)
         traveler_id = init_msg.get("traveler_id", "anonymous")
     except: await websocket.close(); return
-    
     active_websockets[traveler_id] = websocket
     session_transcripts[traveler_id] = []
-    discovery_triggered.discard(traveler_id) # Reset for new session
-    
+    discovery_triggered.discard(traveler_id)
     current_instruction = BASE_SYSTEM_INSTRUCTION + f"\n\nTRAVELER_ID: {traveler_id}"
     try:
         profile_doc = await db.collection("traveler_profiles").document(traveler_id).get()
@@ -257,7 +304,6 @@ async def live_endpoint(websocket: WebSocket):
             facts = profile_doc.to_dict().get("facts", {})
             if facts: current_instruction += f"\n\nTRAVELER MEMORY: {json.dumps(facts)}"
     except: pass
-
     island_agent = Agent(name="IslandHopper", model=LIVE_MODEL, instruction=current_instruction, tools=[get_verified_local_contact, generate_activity_image, generate_whatsapp_handoff, finalize_itinerary, add_day_marker, trigger_visual_discovery])
     runner = Runner(app_name="IslandHopperApp", agent=island_agent, session_service=InMemorySessionService(), auto_create_session=True)
     live_request_queue = LiveRequestQueue()
@@ -266,7 +312,6 @@ async def live_endpoint(websocket: WebSocket):
         output_audio_transcription=types.AudioTranscriptionConfig(),
         speech_config=types.SpeechConfig(voice_config=types.VoiceConfig(prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Aoede")))
     )
-
     async def run_adk_session():
         try:
             async for event in runner.run_live(user_id=traveler_id, session_id=f"session_{traveler_id}", live_request_queue=live_request_queue, run_config=run_config):
@@ -279,34 +324,26 @@ async def live_endpoint(websocket: WebSocket):
                     session_transcripts[traveler_id].append(f"AI: {txt}")
                     await websocket.send_text(json.dumps({"type": "text_resp", "text": txt}))
                 if event.interrupted: await websocket.send_text(json.dumps({"type": "interrupted"}))
-        except Exception as e: logger.error(f"Runner Error: {e}")
-
+        except: pass
     async def handle_client_messages():
         try:
             while True:
                 data = await websocket.receive_text()
                 msg = json.loads(data)
-                if msg.get("type") == "audio":
-                    live_request_queue.send_realtime(types.Blob(mime_type="audio/pcm;rate=16000", data=base64.b64decode(msg["data"])))
+                if msg.get("type") == "audio": live_request_queue.send_realtime(types.Blob(mime_type="audio/pcm;rate=16000", data=base64.b64decode(msg["data"])))
                 elif msg.get("type") == "discovery_results":
                     likes = ", ".join([str(l) for l in msg.get("likes", [])])
-                    live_request_queue.send_content(types.Content(role="user", parts=[types.Part.from_text(text=f"I just finished the visual session. I loved: {likes}. Now suggest a day-by-day plan using the images tool for each spot.")]))
+                    live_request_queue.send_content(types.Content(role="user", parts=[types.Part.from_text(text=f"The discovery session is done. I loved: {likes}. Now suggest a day-by-day plan using the images tool for each spot.")]))
         except WebSocketDisconnect:
             full_t = "\n".join(session_transcripts.get(traveler_id, []))
             if full_t: asyncio.create_task(consolidate_memory(traveler_id, full_t))
             live_request_queue.close(); active_websockets.pop(traveler_id, None)
-        except Exception as e:
-            live_request_queue.close(); active_websockets.pop(traveler_id, None)
-
+        except: live_request_queue.close(); active_websockets.pop(traveler_id, None)
     asyncio.create_task(run_adk_session())
-    
-    # Delayed initial trigger
     async def initial_trigger():
         await asyncio.sleep(3)
-        if traveler_id not in discovery_triggered:
-            await trigger_visual_discovery(traveler_id)
+        if traveler_id not in discovery_triggered: await trigger_visual_discovery(traveler_id)
     asyncio.create_task(initial_trigger())
-    
     await handle_client_messages()
 
 app.mount("/", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../frontend"), html=True), name="frontend")
