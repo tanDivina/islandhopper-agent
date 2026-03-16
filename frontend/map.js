@@ -12,8 +12,8 @@
     var LOCATIONS = [
         {
             name: 'Zapatilla Island',
-            lat: 9.2280,
-            lng: -82.0540,
+            lat: 9.2500,
+            lng: -82.0550,
             category: 'relaxation',
             icon: 'beach',
             description: 'Uninhabited white-sand paradise in the Bastimentos National Marine Park. Crystal-clear water, nesting sea turtles, and zero crowds.',
@@ -23,8 +23,8 @@
         },
         {
             name: 'Dolphin Bay',
-            lat: 9.2050,
-            lng: -82.2200,
+            lat: 9.2250,
+            lng: -82.2590,
             category: 'wildlife',
             icon: 'wildlife',
             description: 'A calm, sheltered bay where pods of bottlenose dolphins play in the morning light. Best visited early before the boats arrive.',
@@ -34,8 +34,8 @@
         },
         {
             name: 'Red Frog Beach',
-            lat: 9.2190,
-            lng: -82.1690,
+            lat: 9.2440,
+            lng: -82.1776,
             category: 'wildlife',
             icon: 'wildlife',
             description: 'Home to the tiny red poison dart frog. A jungle trail leads to a stunning surf beach on Bastimentos Island.',
@@ -45,8 +45,8 @@
         },
         {
             name: 'Starfish Beach',
-            lat: 9.3830,
-            lng: -82.2960,
+            lat: 9.4052,
+            lng: -82.3252,
             category: 'relaxation',
             icon: 'beach',
             description: 'Shallow turquoise waters filled with orange starfish. A must-see spot with beachside restaurants serving fresh ceviche.',
@@ -56,8 +56,8 @@
         },
         {
             name: 'Mangrove Island',
-            lat: 9.2880,
-            lng: -82.2400,
+            lat: 9.2750,
+            lng: -82.2300,
             category: 'adventure',
             icon: 'adventure',
             description: 'Snorkel through tangled mangrove roots teeming with juvenile fish, seahorses, and colorful sponges. A hidden underwater garden.',
@@ -67,8 +67,8 @@
         },
         {
             name: 'Carenero Island',
-            lat: 9.3420,
-            lng: -82.2340,
+            lat: 9.3410,
+            lng: -82.2350,
             category: 'adventure',
             icon: 'adventure',
             description: 'Just a 2-minute water taxi from Bocas Town. Known for beginner-friendly surf breaks, funky bars, and a laid-back vibe.',
@@ -78,8 +78,8 @@
         },
         {
             name: 'Bastimentos Village',
-            lat: 9.2600,
-            lng: -82.1790,
+            lat: 9.3290,
+            lng: -82.1700,
             category: 'culture',
             icon: 'culture',
             description: 'An Afro-Caribbean village built on stilts over the water. Experience authentic local culture, reggae rhythms, and homemade coconut bread.',
@@ -89,8 +89,8 @@
         },
         {
             name: 'San San Pond Sak Wetlands',
-            lat: 9.5930,
-            lng: -82.3370,
+            lat: 9.5280,
+            lng: -82.5148,
             category: 'wildlife',
             icon: 'wildlife',
             description: 'A protected RAMSAR wetland on the mainland. Manatees, caimans, river otters, and over 60 bird species thrive in these freshwater lagoons.',
@@ -100,8 +100,8 @@
         },
         {
             name: 'Monkey Island',
-            lat: 9.2760,
-            lng: -82.2160,
+            lat: 9.2200,
+            lng: -82.0700,
             category: 'wildlife',
             icon: 'wildlife',
             description: 'A tiny island where white-faced capuchin monkeys swing from the trees. They are accustomed to visitors and make for incredible photo opportunities.',
@@ -111,8 +111,8 @@
         },
         {
             name: 'Cayo Coral',
-            lat: 9.2350,
-            lng: -82.1250,
+            lat: 9.2433,
+            lng: -82.1449,
             category: 'adventure',
             icon: 'adventure',
             description: 'A vibrant coral reef just below the surface. Snorkel among parrotfish, angelfish, and sea fans in some of the best reef in the archipelago.',
@@ -122,8 +122,8 @@
         },
         {
             name: 'Finca Montezuma Chocolate Farm',
-            lat: 9.4150,
-            lng: -82.2700,
+            lat: 9.2247,
+            lng: -82.2591,
             category: 'culture',
             icon: 'culture',
             description: 'A family-run organic cacao farm. Learn the bean-to-bar process, taste raw cacao fruit, and sample handmade chocolate in the jungle.',
@@ -151,7 +151,7 @@
         var color = CATEGORY_COLORS[location.category] || '#D4AF37';
         var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="48" viewBox="0 0 36 48">' +
             '<defs><filter id="s" x="-20%" y="-10%" width="140%" height="130%">' +
-            '<feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.4"/></filter></defs>' +
+            '<feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/></filter></defs>' +
             '<path d="M18 47C18 47 33 30 33 18A15 15 0 0 0 3 18C3 30 18 47 18 47Z" ' +
             'fill="' + color + '" stroke="#061F1A" stroke-width="1.5" filter="url(#s)"/>' +
             '<circle cx="18" cy="18" r="8" fill="#061F1A" opacity="0.3"/>' +
@@ -216,7 +216,7 @@
             .addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>')
             .addTo(mapInstance);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             maxZoom: 19
         }).addTo(mapInstance);
 
