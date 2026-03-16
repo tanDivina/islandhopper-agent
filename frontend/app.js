@@ -95,8 +95,8 @@ discoveryNo.onclick = () => {
 function handleDayMarker(dayNumber) {
     const marker = document.createElement('div');
     marker.className = 'day-marker-container';
-    marker.style.cssText = "grid-column: 1 / -1; margin-top: 3rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--brushed-gold); padding-bottom: 0.5rem; animation: fadeIn 1s ease;";
-    marker.innerHTML = `<h2 style="font-family:'Outfit'; color:var(--brushed-gold); text-transform:uppercase; letter-spacing:4px; font-size:2rem;">Day ${dayNumber.toString().padStart(2, '0')}</h2>`;
+    marker.style.cssText = "grid-column: 1 / -1; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid var(--brushed-gold); padding-bottom: 0.5rem; animation: fadeIn 1s ease;";
+    marker.innerHTML = `<h2 class="day-marker-title">Day ${dayNumber.toString().padStart(2, '0')}</h2>`;
     
     itineraryGrid.appendChild(marker);
     itineraryGrid.style.display = 'grid';
