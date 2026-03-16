@@ -1,4 +1,9 @@
-fastapi==0.109.2
-uvicorn==0.27.0
-pydantic==2.6.1
-google-genai==0.3.0google-cloud-firestore==2.16.0
+fastapi>=0.135.1
+uvicorn>=0.41.0
+pydantic>=2.9.0
+google-genai>=1.66.0
+google-cloud-firestore>=2.24.0
+google-cloud-storage>=2.14.0
+google-adk>=1.26.0
+httpx>=0.28.1
+numpy>=1.26.0
