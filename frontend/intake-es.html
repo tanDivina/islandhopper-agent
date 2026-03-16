@@ -6,53 +6,239 @@
     <title>Island Hopper - Registro por Voz</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --deep-emerald: #061F1A; --brushed-gold: #D4AF37; --bocas-turquoise: #00CED1; --white: #FFFFFF; }
-        body { background-color: var(--deep-emerald); color: var(--white); font-family: 'Plus Jakarta Sans', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; padding: 20px; }
-        h1 { font-family: 'Outfit'; color: var(--bocas-turquoise); font-size: 2.5rem; margin-bottom: 1rem; text-shadow: 0 0 15px rgba(0, 206, 209, 0.4); }
-        p { font-size: 1.1rem; opacity: 0.8; max-width: 600px; margin-bottom: 2rem; line-height: 1.6; }
-        
-        .mic-container { margin-bottom: 3rem; position: relative; }
-        .mic-btn {
-            background: none; border: 4px solid var(--bocas-turquoise); color: var(--bocas-turquoise);
-            width: 140px; height: 140px; border-radius: 50%; font-size: 4rem; cursor: pointer;
-            transition: all 0.3s; box-shadow: 0 0 30px rgba(0, 206, 209, 0.3);
-            display: flex; align-items: center; justify-content: center;
+        :root {
+            --deep-emerald: #061F1A;
+            --emerald-light: #0B2D26;
+            --brushed-gold: #D4AF37;
+            --bocas-turquoise: #00CED1;
+            --white: #FFFFFF;
+            --text-muted: rgba(255, 255, 255, 0.6);
         }
-        .mic-btn.recording { background: var(--bocas-turquoise); color: var(--deep-emerald); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 206, 209, 0.7); } 70% { box-shadow: 0 0 0 30px rgba(0, 206, 209, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 206, 209, 0); } }
-        
-        #status { margin-top: 1.5rem; font-size: 1.2rem; color: var(--brushed-gold); font-weight: bold; min-height: 1.5em; }
-        
-        .nav-group { display: flex; flex-direction: column; gap: 12px; margin-top: 2rem; }
-        .manual-btn { background: rgba(0, 206, 209, 0.1); border: 1px solid var(--bocas-turquoise); color: var(--bocas-turquoise); padding: 12px 24px; border-radius: 30px; cursor: pointer; text-decoration: none; font-family: 'Outfit'; font-weight: 600; transition: all 0.3s; }
-        .manual-btn:hover { background: var(--bocas-turquoise); color: black; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--deep-emerald);
+            color: var(--white);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .voice-card {
+            background: var(--emerald-light);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 16px;
+            padding: 3rem 2.5rem;
+            width: 100%;
+            max-width: 520px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .brand {
+            font-family: 'Outfit';
+            color: var(--brushed-gold);
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            opacity: 0.7;
+        }
+
+        h1 {
+            font-family: 'Outfit';
+            color: var(--white);
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            line-height: 1.2;
+        }
+
+        .description {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .description strong {
+            color: var(--brushed-gold);
+            font-weight: 700;
+        }
+
+        .mic-area {
+            margin-bottom: 2rem;
+        }
+
+        .mic-btn {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid var(--bocas-turquoise);
+            background: rgba(0, 206, 209, 0.08);
+            color: var(--bocas-turquoise);
+            font-size: 2.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mic-btn:hover {
+            background: rgba(0, 206, 209, 0.15);
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 206, 209, 0.2);
+        }
+
+        .mic-btn.recording {
+            background: var(--bocas-turquoise);
+            color: var(--deep-emerald);
+            border-color: var(--bocas-turquoise);
+            box-shadow: 0 0 0 0 rgba(0, 206, 209, 0.5);
+            animation: recording-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes recording-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 206, 209, 0.5); }
+            50% { box-shadow: 0 0 0 20px rgba(0, 206, 209, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 206, 209, 0); }
+        }
+
+        .mic-label {
+            display: block;
+            margin-top: 1rem;
+            font-family: 'Outfit';
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #status {
+            margin-top: 1.25rem;
+            font-size: 0.95rem;
+            color: var(--brushed-gold);
+            font-weight: 600;
+            min-height: 1.5em;
+            line-height: 1.5;
+        }
+
+        .send-btn {
+            display: none;
+            margin: 1.5rem auto 0;
+            background: var(--brushed-gold);
+            color: var(--deep-emerald);
+            border: none;
+            padding: 14px 36px;
+            border-radius: 8px;
+            font-family: 'Outfit';
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            background: var(--white);
+            transform: translateY(-1px);
+        }
+
+        .divider {
+            height: 1px;
+            background: rgba(212, 175, 55, 0.15);
+            margin: 2rem 0 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-link {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-family: 'Outfit';
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link--type {
+            background: rgba(0, 206, 209, 0.08);
+            border: 1px solid rgba(0, 206, 209, 0.3);
+            color: var(--bocas-turquoise);
+        }
+
+        .nav-link--type:hover {
+            background: rgba(0, 206, 209, 0.15);
+            border-color: var(--bocas-turquoise);
+        }
+
+        .nav-link--back {
+            background: rgba(212, 175, 55, 0.06);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            color: var(--brushed-gold);
+        }
+
+        .nav-link--back:hover {
+            background: rgba(212, 175, 55, 0.12);
+            border-color: var(--brushed-gold);
+        }
+
+        @media (max-width: 480px) {
+            .voice-card { padding: 2rem 1.5rem; }
+            h1 { font-size: 1.5rem; }
+            .mic-btn { width: 100px; height: 100px; font-size: 2.2rem; }
+            .nav-links { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
-    <h1>Registro por Voz</h1>
-    <p>
-        No pierda tiempo escribiendo. <br>
-        Toque el micrófono y díganos: <b>su nombre, su WhatsApp, qué tours ofrece y sus precios</b>. <br>
-        Nuestra IA se encarga del resto.
-    </p>
-    
-    <div class="mic-container">
-        <button id="micBtn" class="mic-btn">🎙️</button>
-        <div id="status">Listo para escuchar...</div>
-        <button id="sendBtn" style="display:none; margin: 2rem auto 0 auto; background: var(--bocas-turquoise); color: black; border: none; padding: 12px 32px; border-radius: 30px; font-family: 'Outfit'; font-weight: 800; cursor: pointer; box-shadow: 0 0 20px var(--turquoise-glow);">
-            ✅ ENVIAR PARA REVISIÓN
-        </button>
-    </div>
+    <div class="voice-card">
+        <div class="brand">Island Hopper</div>
+        <h1>Registro por Voz</h1>
+        <p class="description">
+            Toque el microfono y diganos <strong>su nombre, su WhatsApp, que tours ofrece y sus precios</strong>. Nuestra IA se encarga del resto.
+        </p>
 
-    <div class="nav-group">
-        <a href="intake-es-form.html" class="manual-btn">Prefiero escribir los datos</a>
-        <a href="index.html" class="manual-btn" style="border-color: var(--brushed-gold); color: var(--brushed-gold); background: rgba(212, 175, 55, 0.1);">Volver a la App Principal</a>
+        <div class="mic-area">
+            <button id="micBtn" class="mic-btn">&#x1F3A4;</button>
+            <span class="mic-label">Toque para iniciar</span>
+            <div id="status"></div>
+            <button id="sendBtn" class="send-btn">Enviar para Revision</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="nav-links">
+            <a href="intake-es-form.html" class="nav-link nav-link--type">Prefiero escribir</a>
+            <a href="index.html" class="nav-link nav-link--back">Volver a la app</a>
+        </div>
     </div>
 
     <script>
         const micBtn = document.getElementById('micBtn');
         const sendBtn = document.getElementById('sendBtn');
         const statusText = document.getElementById('status');
+        const micLabel = document.querySelector('.mic-label');
         let ws = null;
         let isLive = false;
         let audioContext = null;
@@ -65,22 +251,23 @@
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
                 stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                
+
                 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                 ws = new WebSocket(`${protocol}//${window.location.host}/live/partner-intake`);
-                
+
                 ws.onopen = () => {
                     isLive = true;
                     hasRecorded = true;
                     micBtn.classList.add('recording');
-                    statusText.textContent = "El Conserje de Island Hopper está escuchando... Cuéntenos sobre su negocio.";
+                    micLabel.textContent = 'Toque para detener';
+                    statusText.textContent = "Escuchando... Cuentenos sobre sus tours.";
                     sendBtn.style.display = 'none';
-                    
+
                     const source = audioContext.createMediaStreamSource(stream);
                     processor = audioContext.createScriptProcessor(4096, 1, 1);
                     source.connect(processor);
                     processor.connect(audioContext.destination);
-                    
+
                     processor.onaudioprocess = (e) => {
                         if (isLive && ws.readyState === WebSocket.OPEN) {
                             const inputData = e.inputBuffer.getChannelData(0);
@@ -102,7 +289,6 @@
                     const msg = JSON.parse(event.data);
                     if (msg.type === "interrupted") {
                         if (audioContext) {
-                            // Interruption handled by stopping current playback if any
                         }
                     }
                 };
@@ -114,13 +300,14 @@
                     stopAll();
                 };
             } catch (err) {
-                statusText.textContent = "Se requiere acceso al micrófono.";
+                statusText.textContent = "Se requiere acceso al microfono.";
             }
         }
 
         function stopAll() {
             isLive = false;
             micBtn.classList.remove('recording');
+            micLabel.textContent = 'Toque para iniciar';
             if (processor) processor.disconnect();
             if (stream) stream.getTracks().forEach(t => t.stop());
             if (ws) ws.close();
